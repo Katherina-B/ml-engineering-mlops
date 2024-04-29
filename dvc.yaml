@@ -1,15 +1,15 @@
 stages:
   data_download:
-    cmd: python data_download.py
+    cmd: python laod_date.py
     deps:
       - config.yaml
     outs:
-      - data/
+      - /content/data/102flower
 
   train:
     cmd: python train.py
     deps:
-      - data/
+      - /content/data/102flower
       - config.yaml
       - train.py
     outs:
