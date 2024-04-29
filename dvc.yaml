@@ -3,6 +3,7 @@ stages:
     cmd: python load_date.py
     deps:
       - config.yaml
+      - load_date.py
     outs:
       - data/102flower/jpg
 
