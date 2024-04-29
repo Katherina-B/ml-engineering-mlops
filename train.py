@@ -101,16 +101,7 @@ def train(
     val_loader: DataLoader,
     device: str = "cuda" if torch.cuda.is_available() else "cpu",
 ) -> None:
-    """Train the model and evaluate on the validation set.
-
-    Args:
-        model (nn.Module): The PyTorch model to be trained.
-        optimizer (optim.Optimizer): The optimizer for the model.
-        loss_fn (nn.CrossEntropyLoss): The loss function.
-        train_loader (DataLoader): The data loader for the training set.
-        val_loader (DataLoader): The data loader for the validation set.
-        device (str, optional): The device to use for training (CPU or GPU). Defaults to "cuda" if available, else "cpu".
-    """
+   
     model.to(device)
     best_accuracy = 0.0
 
