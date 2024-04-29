@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "lb1"
-description = "Training pipeline for CIFAR-100 dataset"
+name = "lb3"
+description = "Training pipeline for Flower102 dataset"
 authors = ["Katherina Barbasheva <katherina.barbasheva@gmail.com>"]
 version = "0.01"
 
