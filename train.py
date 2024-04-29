@@ -45,15 +45,8 @@ Dataset = Tuple[torch.utils.data.Dataset, torch.utils.data.Dataset, torch.utils.
 ModelOutput = Tuple[nn.Module, optim.Optimizer, nn.CrossEntropyLoss]
 
 
-def load_data(data_dir: str) -> Dataset:
+def split_data(data_dir: str) -> Dataset:
     """Load and preprocess the dataset.
-
-    Args:
-        data_dir (str): The directory where the dataset is stored.
-
-    Returns:
-        Dataset: A tuple containing the train, validation, and test datasets.
-    """
     # Define data transformations
     transform = transforms.Compose([
         transforms.Resize((config["dataset"]["input_shape"][0], config["dataset"]["input_shape"][1])),
@@ -72,27 +65,6 @@ def load_data(data_dir: str) -> Dataset:
     train_dataset = torchvision.datasets.Flowers102(root=data_dir,split="test", transform=transform, download=True)
     val_dataset = torchvision.datasets.Flowers102(root=data_dir, split="val", transform=transform, download=True)
     test_dataset = torchvision.datasets.Flowers102(root=data_dir,    transform=transform, download=True)
-    
-    
-    
-
-    '''
-    # Calculate the validation split size
-    total_size = len(full_dataset)
-    train_ratio = config["dataset"]["train_split"]
-    val_ratio = config["dataset"]["val_split"]
-    test_ratio = config["dataset"]["test_split"]
-    print(f"Total size: {len(full_dataset)}") # Add this line here
-    train_size = int(train_ratio * total_size)
-    val_size = int(val_ratio * total_size)
-    test_size = total_size - train_size - val_size
-
-    # Split the train dataset into train and validation sets
-    train_dataset, val_dataset, test_dataset = random_split(
-        full_dataset,
-        [train_size, val_size, test_size],
-        generator=torch.Generator().manual_seed(config["dataset"]["random_seed"])
-    )'''
     return train_dataset, val_dataset, test_dataset
 
 
@@ -128,7 +100,7 @@ def train(
     train_loader: DataLoader,
     val_loader: DataLoader,
     device: str = "cuda" if torch.cuda.is_available() else "cpu",
-) -> Dict[str, float]:
+) -> None:
     """Train the model and evaluate on the validation set.
 
     Args:
@@ -138,9 +110,6 @@ def train(
         train_loader (DataLoader): The data loader for the training set.
         val_loader (DataLoader): The data loader for the validation set.
         device (str, optional): The device to use for training (CPU or GPU). Defaults to "cuda" if available, else "cpu".
-
-    Returns:
-        Dict[str, float]: A dictionary containing the evaluation metrics on the validation set.
     """
     model.to(device)
     best_accuracy = 0.0
@@ -157,7 +126,7 @@ def train(
 
             for param in model.parameters():
                 param.requires_grad = True
-                
+            
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = loss_fn(outputs, targets)
@@ -196,41 +165,29 @@ def train(
             if config["artifacts"]["save_best_model"]:
                 torch.save(model.state_dict(), os.path.join(config["artifacts"]["output_dir"], "best_model.pth"))
 
-    return {"accuracy": best_accuracy / 100.0}
-
+    # Save logs
+    with open(os.path.join(config["artifacts"]["output_dir"], "training.log"), "w") as log_file:
+        for handler in logger.handlers:
+            if isinstance(handler, logging.FileHandler):
+                log_file.write(handler.stream.getvalue())
 
 def main() -> None:
     # Load and preprocess the dataset
-    train_dataset, val_dataset, test_dataset = load_data(config["data"]["local_dir"])
-    print(f"Number of training examples: {len(train_dataset)}") # Add this line here
-    print(f"Number of val examples: {len(val_dataset)}")
-    print(f"Number of test examples: {len(test_dataset)}")
-
+    train_dataset, val_dataset, test_dataset =split_data(config["data"]["local_dir"])
+    
     # Create data loaders
     train_loader = DataLoader(train_dataset, batch_size=config["training"]["batch_size"], shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=config["training"]["batch_size"])
+    
 
     # Create the model, optimizer, and loss function
     model, optimizer, loss_fn = create_model()
 
     # Train the model
-    metrics = train(model, optimizer, loss_fn, train_loader, val_loader)
-    logger.info(f"Validation metrics: {metrics}")
+    train(model, optimizer, loss_fn, train_loader, val_loader)
 
-    # Save artifacts
-    os.makedirs(config["artifacts"]["output_dir"], exist_ok=True)
-    if config["artifacts"]["save_best_model"]:
-        torch.save(model.state_dict(), os.path.join(config["artifacts"]["output_dir"], "best_model.pth"))
-    if config["artifacts"]["save_logs"]:
-        # Save logs
-        with open(os.path.join(config["artifacts"]["output_dir"], "training.log"), "w") as log_file:
-            for handler in logger.handlers:
-                if isinstance(handler, logging.FileHandler):
-                    log_file.write(handler.stream.getvalue())
-    if config["artifacts"]["save_metrics"]:
-        # Save metrics
-        with open(os.path.join(config["artifacts"]["output_dir"], "metrics.json"), "w") as metrics_file:
-            json.dump(metrics, metrics_file)
+    # Save the trained model
+    torch.save(model.state_dict(), os.path.join(config["artifacts"]["output_dir"], "model.pth"))
 
 
 if __name__ == "__main__":
