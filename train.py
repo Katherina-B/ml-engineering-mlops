@@ -46,7 +46,6 @@ ModelOutput = Tuple[nn.Module, optim.Optimizer, nn.CrossEntropyLoss]
 
 
 def split_data(data_dir: str) -> Dataset:
-    """Load and preprocess the dataset.
     # Define data transformations
     transform = transforms.Compose([
         transforms.Resize((config["dataset"]["input_shape"][0], config["dataset"]["input_shape"][1])),
