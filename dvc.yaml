@@ -4,12 +4,12 @@ stages:
     deps:
       - config.yaml
     outs:
-      - /content/data/102flower
+      - /content/lb3
 
   train:
     cmd: python train.py
     deps:
-      - /content/data/102flower
+      - /content/lb3
       - config.yaml
       - train.py
     outs:
