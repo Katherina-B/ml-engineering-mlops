@@ -1,6 +1,6 @@
 # Data configuration
 data:
-  local_dir: /content/data/102flower
+  local_dir: /content/lb3/data/102flower
   dataset_url: https://www.robots.ox.ac.uk/~vgg/data/flowers/102/102flowers.tgz
   label_url: https://www.robots.ox.ac.uk/~vgg/data/flowers/102/imagelabels.mat
 
