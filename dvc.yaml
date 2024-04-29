@@ -1,15 +1,15 @@
 stages:
-  data_download:
-    cmd: python laod_date.py
+  load_date:
+    cmd: python load_date.py
     deps:
       - config.yaml
     outs:
-      - /content/lb3
+      - data/102flower
 
   train:
     cmd: python train.py
     deps:
-      - /content/lb3
+      - data/102flower
       - config.yaml
       - train.py
     outs:
@@ -20,7 +20,7 @@ stages:
     cmd: python evaluate.py
     deps:
       - model.pth
-      - data/
+      - data/102flower
       - config.yaml
       - evaluate.py
     metrics:
