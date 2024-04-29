@@ -13,7 +13,7 @@ matplotlib = "3.6.3"
 numpy = "1.22.4"
 pyyaml = "6.0"
 scipy = "1.13.0rc1"
-dvc = "2.16.4"
+dvc = "2.15.4"
 
 [tool.poetry.dev-dependencies]
 mypy = "0.991"
