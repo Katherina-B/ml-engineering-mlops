@@ -69,7 +69,7 @@ def split_data(data_dir: str) -> Dataset:
 
 
 def create_model() -> ModelOutput:
-    """Create the model, optimizer, and loss function."""
+    
     # Create your model
     model = models.resnet50(pretrained=config["model"]["pretrained"])
     num_ftrs = model.fc.in_features
