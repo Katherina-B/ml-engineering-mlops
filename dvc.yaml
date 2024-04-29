@@ -1,0 +1,27 @@
+stages:
+  data_download:
+    cmd: python data_download.py
+    deps:
+      - config.yaml
+    outs:
+      - data/
+
+  train:
+    cmd: python train.py
+    deps:
+      - data/
+      - config.yaml
+      - train.py
+    outs:
+      - model.pth
+      - logs/training.log
+
+  evaluate:
+    cmd: python evaluate.py
+    deps:
+      - model.pth
+      - data/
+      - config.yaml
+      - evaluate.py
+    metrics:
+      - metrics.json
