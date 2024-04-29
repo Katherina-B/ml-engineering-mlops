@@ -4,8 +4,7 @@ stages:
     deps:
       - config.yaml
       - load_date.py
-    outs:
-      - data/102flower
+    
 
   train:
     cmd: python train.py
