@@ -5,12 +5,12 @@ stages:
       - config.yaml
       - load_date.py
     outs:
-      - data/102flower/jpg
+      - data/102flower
 
   train:
     cmd: python train.py
     deps:
-      - data/102flower/jpg
+      - data/102flower
       - config.yaml
       - train.py
     outs:
