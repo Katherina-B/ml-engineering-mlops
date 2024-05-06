@@ -164,6 +164,9 @@ def train(
                 log_file.write(handler.stream.getvalue())
 
 def main() -> None:
+    output_dir = config["artifacts"]["output_dir"]
+    os.makedirs(output_dir, exist_ok=True)
+    
     # Load and preprocess the dataset
     train_dataset, val_dataset, test_dataset =split_data(config["data"]["local_dir"])
     
