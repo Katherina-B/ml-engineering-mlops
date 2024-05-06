@@ -16,7 +16,8 @@ import torchvision.models as models
 
 
 
-output_dir = "/content/artifacts"
+output_dir = os.path.dirname(config["artifacts"]["output_dir"])
+
 os.makedirs(output_dir, exist_ok=True)
 
 # Load configuration
