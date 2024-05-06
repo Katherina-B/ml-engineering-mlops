@@ -38,7 +38,7 @@ logging:
 
 # Artifacts configuration
 artifacts:
-  output_dir:/content/lb3/artifacts
+  output_dir: /content/lb3/artifacts
   save_best_model: True
   save_logs: True
   save_metrics: True
