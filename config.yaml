@@ -33,7 +33,7 @@ model:
 # Logging configuration
 logging:
   level: INFO
-  file: /content/logs/training.log
+  file: /content/lb3/logs/training.log
   format: '%(asctime)s - %(levelname)s - %(message)s'
 
 # Artifacts configuration
