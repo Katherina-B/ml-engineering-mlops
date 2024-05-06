@@ -14,7 +14,7 @@ stages:
       - config.yaml
       - train.py
     outs:
-      - model.pth
+      - artifacts/model.pth
       - logs/training.log
 
   evaluate:
