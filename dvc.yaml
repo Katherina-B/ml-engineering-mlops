@@ -20,7 +20,7 @@ stages:
   evaluate:
     cmd: python evaluate.py
     deps:
-      - model.pth
+      - artifacts/model.pth
       - data/102flower
       - config.yaml
       - evaluate.py
