@@ -2,8 +2,10 @@ import torch
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
-from config import config
 from train import load_data, create_model
+
+with open("config.yaml", "r") as f:
+    config = yaml.safe_load(f)
 
 def evaluate(model, test_loader, device):
     model.eval()
