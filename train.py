@@ -16,9 +16,7 @@ import torchvision.models as models
 
 
 
-output_dir = os.path.dirname(config["artifacts"]["output_dir"])
 
-os.makedirs(output_dir, exist_ok=True)
 
 # Load configuration
 with open("config.yaml", "r") as f:
@@ -29,6 +27,9 @@ log_dir = os.path.dirname(config["logging"]["file"])
 
 # Create the directory if it doesn't exist
 os.makedirs(log_dir, exist_ok=True)
+
+output_dir = os.path.dirname(config["artifacts"]["output_dir"])
+os.makedirs(output_dir, exist_ok=True)
 
 # Set up logging
 logging.basicConfig(
