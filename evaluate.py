@@ -8,6 +8,26 @@ from train import split_data, create_model
 with open("params.yaml", "r") as f:
     config = yaml.safe_load(f)
 
+def load_data(data_dir: str) -> Dataset:
+    # Define data transformations
+    transform = transforms.Compose([
+        transforms.Resize((config["dataset"]["input_shape"][0], config["dataset"]["input_shape"][1])),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        # Add or remove any other necessary transforms
+    ])
+
+    data_dir = os.path.join(data_dir, "jpg")
+
+    # Check if data is already downloaded
+    if not os.path.exists(data_dir):
+        raise FileNotFoundError(f"Data directory '{data_dir}' does not exist. Please download the dataset.")
+
+    # Check if dataset is already loaded
+   
+    test_dataset = torchvision.datasets.Flowers102(root=data_dir,    transform=transform, download=True)
+    return test_dataset
+
 def evaluate(model, test_loader, device):
     model.eval()
     correct = 0
@@ -29,7 +49,7 @@ def evaluate(model, test_loader, device):
 
 def main():
     # Load the dataset
-    _, _, test_dataset = load_data(config["data"]["local_dir"])
+    test_dataset = load_data(config["data"]["local_dir"])
 
     # Create the data loader
     test_loader = DataLoader(test_dataset, batch_size=config["training"]["batch_size"])
