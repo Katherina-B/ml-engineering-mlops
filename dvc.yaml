@@ -12,7 +12,7 @@ stages:
   train:
     cmd: python train.py
     params:
-      - training.epoch
+      - training.epochs
       - training.batch_size
       - training.optimizer
       - model
