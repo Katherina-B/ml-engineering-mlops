@@ -2,7 +2,7 @@ stages:
   load_date:
     cmd: python load_date.py
     deps:
-      - config.yaml
+      - params.yaml
       - load_date.py
     outs:
       - data/102flower
@@ -11,7 +11,7 @@ stages:
     cmd: python train.py
     deps:
       - data/102flower
-      - config.yaml
+      - params.yaml
       - train.py
     outs:
       - artifacts/model.pth
@@ -22,7 +22,7 @@ stages:
     deps:
       - artifacts/model.pth
       - data/102flower
-      - config.yaml
+      - params.yaml
       - evaluate.py
     metrics:
       - metrics.json
