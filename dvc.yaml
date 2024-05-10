@@ -12,10 +12,10 @@ stages:
   train:
     cmd: python train.py
     params:
-      - params.yaml:train
-      - params.yaml:model
-      - params.yaml:logging
-      - params.yaml:artifacts
+      - train
+      - model
+      - logging
+      - artifacts
     deps:
       - data/102flower
       - params.yaml
@@ -27,8 +27,8 @@ stages:
   evaluate:
     cmd: python evaluate.py
     params:
-      - params.yaml:eval
-      - params.yaml:artifacts
+      - eval
+      - artifacts
     deps:
       - artifacts/model.pth
       - data/102flower
