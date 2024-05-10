@@ -2,7 +2,7 @@ stages:
   load_date:
     cmd: python load_date.py
     params:
-      - params.yaml:data
+      - data
     deps:
       - params.yaml
       - load_date.py
