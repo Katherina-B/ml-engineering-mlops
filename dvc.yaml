@@ -12,7 +12,9 @@ stages:
   train:
     cmd: python train.py
     params:
-      - train
+      - train.epoch
+      - train.batch_size
+      - train.optimizer.
       - model
       - logging
       - artifacts
@@ -27,8 +29,8 @@ stages:
   evaluate:
     cmd: python evaluate.py
     params:
-      - eval
-      - artifacts
+      - evaluation.metrics
+      - artifacts.output_dir
     deps:
       - artifacts/model.pth
       - data/102flower
