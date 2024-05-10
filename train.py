@@ -19,7 +19,7 @@ import torchvision.models as models
 
 
 # Load configuration
-with open("config.yaml", "r") as f:
+with open("params.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 # Extract the directory path from the log file path
