@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
+import yaml
 
 from train import split_data, create_model
 
