@@ -31,7 +31,7 @@ def download_and_extract_archive(url, destination_folder, config=None):
     os.remove(filename)
  
 if __name__ == "__main__":
-    config_file = "config.yaml"
+    config_file = "params.yaml"
     config = load_config(config_file)
     archive_url = config['data']['dataset_url']
     destination_folder = config['data']['local_dir']
