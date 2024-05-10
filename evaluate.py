@@ -79,8 +79,11 @@ def main():
     metrics = evaluate(model, test_loader, device)
 
     # Save the metrics
-    with open(config["artifacts"]["output_dir"] + "/metrics.json", "w") as f:
+    output_dir = config["artifacts"]["output_dir"]
+    metrics_file = os.path.join(output_dir, "metrics.json")
+    with open(metrics_file, "w") as f:
         json.dump(metrics, f)
+    print(f"Metrics saved to: {metrics_file}")
 
 if __name__ == "__main__":
     main()
