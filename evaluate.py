@@ -71,7 +71,7 @@ def main():
 
     # Load the trained model
     model, _, _ = create_model()
-    model.load_state_dict(torch.load(config["artifacts"]["output_dir"] + "/model.pth"))
+    model.load_state_dict(torch.load(config["artifacts"]["output_dir"] + "/best_model.pth"))
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device)
 
