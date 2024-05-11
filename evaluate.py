@@ -78,25 +78,25 @@ def main():
     # Evaluate the model
     metrics = evaluate(model, test_loader, device)
 
-  output_dir = config["artifacts"]["output_dir"]
-metrics_file = os.path.join(output_dir, "metrics.json")
+    output_dir = config["artifacts"]["output_dir"]
+    metrics_file = os.path.join(output_dir, "metrics.json")
 
-# Check if the file exists
-if os.path.isfile(metrics_file):
-    # File exists, load existing metrics and append new ones
-    with open(metrics_file, "r") as f:
-        existing_metrics = json.load(f)
-    existing_metrics.update(metrics)
-    metrics_to_save = existing_metrics
-else:
-    # File doesn't exist, create a new one
-    metrics_to_save = metrics
+    # Check if the file exists
+    if os.path.isfile(metrics_file):
+        # File exists, load existing metrics and append new ones
+        with open(metrics_file, "r") as f:
+            existing_metrics = json.load(f)
+        existing_metrics.update(metrics)
+        metrics_to_save = existing_metrics
+    else:
+        # File doesn't exist, create a new one
+        metrics_to_save = metrics
 
-# Save the metrics
-with open(metrics_file, "w") as f:
-    json.dump(metrics_to_save, f, indent=4)
+    # Save the metrics
+    with open(metrics_file, "w") as f:
+        json.dump(metrics_to_save, f, indent=4)
 
-print(f"Metrics saved to: {metrics_file}")
+    print(f"Metrics saved to: {metrics_file}")
 
 if __name__ == "__main__":
     main()
