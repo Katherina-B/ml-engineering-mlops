@@ -182,7 +182,7 @@ def main() -> None:
     train(model, optimizer, loss_fn, train_loader, val_loader)
 
     # Save the trained model
-    torch.save(model.state_dict(), os.path.join(config["artifacts"]["output_dir"], "model.pth"))
+    torch.save(model.state_dict(), os.path.join(config["artifacts"]["output_dir"], "best_model.pth"))
 
 
 if __name__ == "__main__":
