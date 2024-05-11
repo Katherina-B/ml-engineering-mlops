@@ -4,7 +4,6 @@ stages:
     params:
       - data
     deps:
-      - params.yaml
       - load_date.py
     outs:
       - data/102flower
@@ -20,10 +19,9 @@ stages:
       - artifacts
     deps:
       - data/102flower
-      - params.yaml
       - train.py
     outs:
-      - artifacts/model.pth
+      - artifacts/best_model.pth
       - logs/training.log
 
   evaluate:
@@ -32,9 +30,8 @@ stages:
       - evaluation.metrics
       - artifacts.output_dir
     deps:
-      - artifacts/model.pth
+      - artifacts/best_model.pth
       - data/102flower
-      - params.yaml
       - evaluate.py
     metrics:
       - artifacts/metrics.json
