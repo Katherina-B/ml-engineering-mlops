@@ -18,7 +18,8 @@ import torchvision.models as models
 Dataset = Tuple[torch.utils.data.Dataset, torch.utils.data.Dataset, torch.utils.data.Dataset]
 ModelOutput = Tuple[nn.Module, optim.Optimizer, nn.CrossEntropyLoss]
 
-from train import split_data, create_model
+from train import create_model
+from load_date import load_and_split_data
 
 with open("params.yaml", "r") as f:
     config = yaml.safe_load(f)
@@ -64,7 +65,7 @@ def evaluate(model, test_loader, device):
 
 def main():
     # Load the dataset
-    test_dataset = load_data(config["data"]["local_dir"])
+    ,,test_dataset = load_and_split_data(config["data"]["local_dir"])
 
     # Create the data loader
     test_loader = DataLoader(test_dataset, batch_size=config["training"]["batch_size"])
