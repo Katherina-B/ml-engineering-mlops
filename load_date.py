@@ -74,6 +74,6 @@ if __name__ == "__main__":
     with open('data/val_dataset.pkl', 'wb') as f:
         pickle.dump(val_dataset, f)
     with open('data/test_dataset.pkl', 'wb') as f:
-        pickle.dump(test_dataset, f) train_dataset, val_dataset, test_dataset = load_and_split_data(destination_folder)
+        pickle.dump(test_dataset, f)
 
  
