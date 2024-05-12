@@ -65,7 +65,7 @@ def evaluate(model, test_loader, device):
 
 def main():
     # Load the dataset
-    ,,test_dataset = load_and_split_data(config["data"]["local_dir"])
+    _, _, test_dataset = load_and_split_data(data_dir)
 
     # Create the data loader
     test_loader = DataLoader(test_dataset, batch_size=config["training"]["batch_size"])
