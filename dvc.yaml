@@ -6,7 +6,9 @@ stages:
     deps:
       - load_date.py
     outs:
-      - data/102flower
+      - data/train_dataset.pkl
+      - data/val_dataset.pkl
+      - data/test_dataset.pkl
 
   train:
     cmd: python train.py
@@ -18,8 +20,9 @@ stages:
       - logging
       - artifacts
     deps:
-      - data/102flower
       - train.py
+      - data/train_dataset.pkl
+      - data/val_dataset.pkl
     outs:
       - artifacts/best_model.pth
       - logs/training.log
@@ -31,7 +34,7 @@ stages:
       - artifacts.output_dir
     deps:
       - artifacts/best_model.pth
-      - data/102flower
+      - data/test_dataset.pkl
       - evaluate.py
     metrics:
       - artifacts/metrics.json
