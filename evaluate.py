@@ -21,7 +21,7 @@ ModelOutput = Tuple[nn.Module, optim.Optimizer, nn.CrossEntropyLoss]
 
 from train import create_model
 from load_date import load_and_split_data
-from load_data import load_config
+from load_date import load_config
 
 config = load_config("params.yaml")
 data_dir = config["data"]["local_dir"]
