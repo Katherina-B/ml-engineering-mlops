@@ -9,13 +9,9 @@ import torch.optim as optim
 import torchvision.transforms as transforms
 import torchvision
 import yaml
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 import torchvision.models as models
-
-
-
-
 
 
 # Load configuration
@@ -46,27 +42,6 @@ logger = logging.getLogger(__name__)
 Dataset = Tuple[torch.utils.data.Dataset, torch.utils.data.Dataset, torch.utils.data.Dataset]
 ModelOutput = Tuple[nn.Module, optim.Optimizer, nn.CrossEntropyLoss]
 
-
-def split_data(data_dir: str) -> Dataset:
-    # Define data transformations
-    transform = transforms.Compose([
-        transforms.Resize((config["dataset"]["input_shape"][0], config["dataset"]["input_shape"][1])),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        # Add or remove any other necessary transforms
-    ])
-
-    data_dir = os.path.join(data_dir, "jpg")
-
-    # Check if data is already downloaded
-    if not os.path.exists(data_dir):
-        raise FileNotFoundError(f"Data directory '{data_dir}' does not exist. Please download the dataset.")
-
-    # Check if dataset is already loaded
-    train_dataset = torchvision.datasets.Flowers102(root=data_dir,split="test", transform=transform, download=True)
-    val_dataset = torchvision.datasets.Flowers102(root=data_dir, split="val", transform=transform, download=True)
-    test_dataset = torchvision.datasets.Flowers102(root=data_dir,    transform=transform, download=True)
-    return train_dataset, val_dataset, test_dataset
 
 
 def create_model() -> ModelOutput:
@@ -168,7 +143,7 @@ def main() -> None:
     os.makedirs(output_dir, exist_ok=True)
     
     # Load and preprocess the dataset
-    train_dataset, val_dataset, test_dataset =split_data(config["data"]["local_dir"])
+    train_dataset, val_dataset, test_dataset = load_and_split_data(config["data"]["local_dir"])
     
     # Create data loaders
     train_loader = DataLoader(train_dataset, batch_size=config["training"]["batch_size"], shuffle=True)
