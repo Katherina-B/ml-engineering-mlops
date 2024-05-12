@@ -12,6 +12,7 @@ import yaml
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import torchvision.models as models
+from load_date import load_and_split_data
 
 
 # Load configuration
