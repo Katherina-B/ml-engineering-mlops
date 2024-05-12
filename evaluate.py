@@ -15,16 +15,16 @@ from tqdm import tqdm
 import torchvision.models as models
 
 
+
 Dataset = Tuple[torch.utils.data.Dataset, torch.utils.data.Dataset, torch.utils.data.Dataset]
 ModelOutput = Tuple[nn.Module, optim.Optimizer, nn.CrossEntropyLoss]
 
 from train import create_model
 from load_date import load_and_split_data
+from load_data import load_config
 
-with open("params.yaml", "r") as f:
-    config = yaml.safe_load(f)
-
-data_dir = os.path.join(data_dir, "jpg")
+config = load_config("params.yaml")
+data_dir = config["data"]["local_dir"]
 
 def evaluate(model, test_loader, device):
     model.eval()
@@ -46,6 +46,8 @@ def evaluate(model, test_loader, device):
     return metrics
 
 def main():
+    config = load_config("params.yaml")
+    data_dir = config["data"]["local_dir"]
     # Load the dataset
     _, _, test_dataset = load_and_split_data(data_dir)
 
