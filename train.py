@@ -46,7 +46,19 @@ logger = logging.getLogger(__name__)
 Dataset = Tuple[torch.utils.data.Dataset, torch.utils.data.Dataset, torch.utils.data.Dataset]
 ModelOutput = Tuple[nn.Module, optim.Optimizer, nn.CrossEntropyLoss]
 
+ind = random.randrange(1, 100)
 
+wandb.init(
+    # Set the project where this run will be logged
+    project="lb5",
+    # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
+    name=f"run_{ind}",
+    # Track hyperparameters and run metadata
+    config={
+    "learning_rate": config["training"]["optimizer"],
+    "dataset": "Flower-102",
+    "epochs": config["training"]["epochs"],
+    })
 
 def create_model() -> ModelOutput:
     
@@ -181,20 +193,7 @@ def main() -> None:
     
     # Load and preprocess the dataset
     train_dataset, val_dataset, test_dataset = load_and_split_data(config["data"]["local_dir"])
-    ind = random.randrange(1, 100)
-
-    wandb.init(
-      # Set the project where this run will be logged
-      project="lb5",
-      # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
-      name=f"run_{ind}",
-      # Track hyperparameters and run metadata
-      config={
-      "learning_rate": config["training"]["optimizer"],
-      "dataset": "Flower-102",
-      "epochs": config["training"]["epochs"],
-      })
-    
+       
         
     # Create data loaders
     train_loader = DataLoader(train_dataset, batch_size=config["training"]["batch_size"], shuffle=True)
