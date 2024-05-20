@@ -3,6 +3,7 @@ import os
 import json
 from typing import Dict, Tuple
 import random
+import time
 
 import wandb
 import torch
@@ -83,7 +84,7 @@ def train(
 ) -> Dict[str, float]:
     model.to(device)
     best_test_accuracy = 0.0
-    ind = gmtime()
+    ind = time.gmtime()
 
     wandb.init(
       # Set the project where this run will be logged
