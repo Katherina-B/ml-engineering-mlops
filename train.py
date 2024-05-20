@@ -14,6 +14,8 @@ from tqdm import tqdm
 import torchvision.models as models
 from load_date import load_and_split_data
 
+import wandb
+wandb.login()
 
 # Load configuration
 with open("params.yaml", "r") as f:
