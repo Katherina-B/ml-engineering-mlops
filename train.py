@@ -3,7 +3,7 @@ import os
 import json
 from typing import Dict, Tuple
 import random
-from datetime import datetime
+
 import wandb
 import torch
 import torch.nn as nn
@@ -88,7 +88,7 @@ def train(
       # Set the project where this run will be logged
       project="lb5",
       # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
-      ind = datetime.now()
+      ind =random()
       name=f"run_{ind}",
       # Track hyperparameters and run metadata
       config={
