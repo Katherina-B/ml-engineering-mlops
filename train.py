@@ -83,7 +83,7 @@ def train(
 ) -> Dict[str, float]:
     model.to(device)
     best_test_accuracy = 0.0
-    ind = random.randrange(1,100)
+    ind = gmtime()
 
     wandb.init(
       # Set the project where this run will be logged
@@ -190,6 +190,7 @@ def train(
 
 def main() -> None:
     output_dir = config["artifacts"]["output_dir"]
+    os.makedirs(output_dir, exist_ok=True)
     
     # Load and preprocess the dataset
     train_dataset, val_dataset, test_dataset = load_and_split_data(config["data"]["local_dir"])
