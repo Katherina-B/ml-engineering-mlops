@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "lb3"
+name = "lb5"
 description = "Training pipeline for Flower102 dataset"
 authors = ["Katherina Barbasheva <katherina.barbasheva@gmail.com>"]
 version = "0.01"
@@ -14,6 +14,7 @@ numpy = "1.22.4"
 pyyaml = "6.0"
 scipy = "1.13.0rc1"
 dvc = "^2.48.2"
+wanb = "0.17.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "0.991"
