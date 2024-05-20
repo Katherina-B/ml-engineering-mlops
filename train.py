@@ -83,12 +83,12 @@ def train(
 ) -> Dict[str, float]:
     model.to(device)
     best_test_accuracy = 0.0
+    ind = random.randrange(1,100)
 
     wandb.init(
       # Set the project where this run will be logged
       project="lb5",
       # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
-      ind = random.randrange(1,100),
       name=f"run_{ind}",
       # Track hyperparameters and run metadata
       config={
