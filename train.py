@@ -88,7 +88,7 @@ def train(
       # Set the project where this run will be logged
       project="lb5",
       # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
-      ind =random()
+      ind =random.randrange(100)
       name=f"run_{ind}",
       # Track hyperparameters and run metadata
       config={
