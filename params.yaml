@@ -1,6 +1,6 @@
 # Data configuration
 data:
-  local_dir: /content/lb3/data/102flower
+  local_dir: /content/lb5/data/102flower
   dataset_url: https://www.robots.ox.ac.uk/~vgg/data/flowers/102/102flowers.tgz
   label_url: https://www.robots.ox.ac.uk/~vgg/data/flowers/102/imagelabels.mat
 
@@ -33,14 +33,14 @@ model:
 # Logging configuration
 logging:
   level: INFO
-  file: /content/lb3/logs/training.log
+  file: /content/lb5/logs/training.log
   format: '%(asctime)s - %(levelname)s - %(message)s'
 
 # Artifacts configuration
 artifacts:
-  output_dir: /content/lb3/artifacts
-  model_file: /content/lb3/artifacts/model.pth
-  best_model_file: /content/lb3/artifacts/best_model.pth
+  output_dir: /content/lb5/artifacts
+  model_file: /content/lb5/artifacts/model.pth
+  best_model_file: /content/lb5/artifacts/best_model.pth
   save_best_model: True
   save_logs: True
   save_metrics: True
