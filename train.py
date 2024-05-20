@@ -181,7 +181,7 @@ def main() -> None:
     
     # Load and preprocess the dataset
     train_dataset, val_dataset, test_dataset = load_and_split_data(config["data"]["local_dir"])
-    ind = time.gmtime()
+    ind = random.randrange(1, 100)
 
     wandb.init(
       # Set the project where this run will be logged
