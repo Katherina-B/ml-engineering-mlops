@@ -175,7 +175,7 @@ def train(
             },
             step=epoch,
         )
-        wandb.finish()
+        
 
 
         if test_accuracy > best_test_accuracy:
@@ -233,6 +233,7 @@ def main() -> None:
         json.dump(metrics_to_save, f, indent=4)
 
     print(f"Metrics saved to: {metrics_file}")
+    wandb.finish()
         
         
 
