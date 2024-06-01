@@ -46,11 +46,11 @@ logger = logging.getLogger(__name__)
 Dataset = Tuple[torch.utils.data.Dataset, torch.utils.data.Dataset, torch.utils.data.Dataset]
 ModelOutput = Tuple[nn.Module, optim.Optimizer, nn.CrossEntropyLoss]
 
-ind = random.randrange(1, 100)
+ind = config["training"]["optimizer"]["lr"]
 
 wandb.init(
     # Set the project where this run will be logged
-    project="lb5",
+    project="lb5_1",
     # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
     name=f"run_{ind}",
     # Track hyperparameters and run metadata
