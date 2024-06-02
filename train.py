@@ -4,6 +4,8 @@ import json
 from typing import Dict, Tuple
 import random
 import time
+import captum
+from captum.attr import IntegratedGradients, Occlusion, LayerCam
 
 import wandb
 import torch
@@ -187,6 +189,43 @@ def train(
             if isinstance(handler, logging.FileHandler):
                 log_file.write(handler.stream.getvalue())
 
+def compute_interpretability(
+    model: nn.Module,
+    test_loader: DataLoader,
+    device: str = "cuda" if torch.cuda.is_available() else "cpu",
+):
+    model.to(device)
+    model.eval()
+
+    # Create interpretability instances
+    integrated_gradients = IntegratedGradients(model)
+    occlusion = Occlusion(model)
+    layer_cam = LayerCam(model, model.layer4)
+
+    # Iterate over test dataset
+    for inputs, targets in tqdm(test_loader, desc="Computing interpretability"):
+        inputs, targets = inputs.to(device), targets.to(device)
+
+        # Compute attributions
+        attributions_ig = integrated_gradients.attribute(inputs, target=targets, n_steps=50)
+        attributions_occ = occlusion.attribute(inputs, target=targets, sliding_window_shapes=(3, 8, 8))
+        attributions_cam = layer_cam.attribute(inputs, target=targets)
+
+        # Save attributions to W&B
+        wandb.log(
+            {
+                "integrated_gradients": wandb.Image(attributions_ig[0]),
+                "occlusion": wandb.Image(attributions_occ[0]),
+                "layer_cam": wandb.Image(attributions_cam[0]),
+            },
+            step=wandb.run.step,
+        )
+
+        # Break after a few examples (adjust as needed)
+        if wandb.run.step > 10:
+            break
+
+
 def main() -> None:
     output_dir = config["artifacts"]["output_dir"]
     os.makedirs(output_dir, exist_ok=True)
@@ -204,6 +243,7 @@ def main() -> None:
 
     # Train the model
     train(model, optimizer, loss_fn, train_loader, val_loader, test_loader)
+    compute_interpretability(model, test_loader)
 
     wandb.finish()
         
