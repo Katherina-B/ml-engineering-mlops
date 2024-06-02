@@ -5,8 +5,7 @@ from typing import Dict, Tuple
 import random
 import time
 import captum
-from captum.attr import IntegratedGradients, Occlusion
-from captum.attr import LayerCam as LayerCamAttribution
+from captum.attr import IntegratedGradients, Occlusion, GradientShap
 
 import wandb
 import torch
@@ -201,7 +200,7 @@ def compute_interpretability(
     # Create interpretability instances
     integrated_gradients = IntegratedGradients(model)
     occlusion = Occlusion(model)
-    layer_cam = LayerCamAttribution(model, model.layer4)
+    gradient_shap = GradientShap(model)
 
     # Iterate over test dataset
     for inputs, targets in tqdm(test_loader, desc="Computing interpretability"):
@@ -210,14 +209,14 @@ def compute_interpretability(
         # Compute attributions
         attributions_ig = integrated_gradients.attribute(inputs, target=targets, n_steps=50)
         attributions_occ = occlusion.attribute(inputs, target=targets, sliding_window_shapes=(3, 8, 8))
-        attributions_cam = layer_cam.attribute(inputs, target=targets)
+        attributions_shap = gradient_shap.attribute(inputs, target=targets, n_samples=50)
 
         # Save attributions to W&B
         wandb.log(
             {
                 "integrated_gradients": wandb.Image(attributions_ig[0]),
                 "occlusion": wandb.Image(attributions_occ[0]),
-                "layer_cam": wandb.Image(attributions_cam[0]),
+                "gradient_shap": wandb.Image(attributions_shap[0]),
             },
             step=wandb.run.step,
         )
