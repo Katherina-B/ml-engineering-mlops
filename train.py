@@ -201,7 +201,7 @@ def compute_interpretability(
     # Create interpretability instances
     integrated_gradients = IntegratedGradients(model)
     occlusion = Occlusion(model)
-    layer_cam = LayerCam(model, model.layer4)
+    layer_cam = LayerCamAttribution(model, model.layer4)
 
     # Iterate over test dataset
     for inputs, targets in tqdm(test_loader, desc="Computing interpretability"):
