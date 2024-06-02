@@ -52,7 +52,7 @@ ind = config["training"]["optimizer"]["lr"]
 
 wandb.init(
     # Set the project where this run will be logged
-    project="lb5_1",
+    project="lb5_2",
     # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
     name=f"run_{ind}",
     # Track hyperparameters and run metadata
