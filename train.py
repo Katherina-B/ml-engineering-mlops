@@ -5,7 +5,8 @@ from typing import Dict, Tuple
 import random
 import time
 import captum
-from captum.attr import IntegratedGradients, Occlusion, LayerCam
+from captum.attr import IntegratedGradients, Occlusion
+from captum.attr import LayerCam as LayerCamAttribution
 
 import wandb
 import torch
