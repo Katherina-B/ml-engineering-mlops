@@ -197,8 +197,6 @@ def interpret_model(
     test_loader: DataLoader,
     device: str = "cuda" if torch.cuda.is_available() else "cpu",
 ):
-    logger = setup_logger()
-   
     model.to(device)
     model.eval()
     ig = IntegratedGradients(model)
