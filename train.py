@@ -233,7 +233,7 @@ def compute_lime_interpretability(
                 # Compute and log LIME explanation if the class has less than 10 examples
                 if len(misclassified_examples[target.item()]) <= 10:
                     # Create a LIME explainer
-                    explainer = lime_image.LimeImageExplainer()
+                    explainer = lime_image.LimeImageExplainer(data_transform=data_transform)
 
                     # Compute LIME explanation
                     explanation = explainer.explain_instance(
@@ -243,7 +243,6 @@ def compute_lime_interpretability(
                         hide_color=0,
                         num_samples=1000,
                         batch_size=100,
-                        data_transform=data_transform,
                     )
 
                     # Visualize the explanation
@@ -268,21 +267,6 @@ def compute_lime_interpretability(
             wandb.log({
                 "misclassified_image": wandb.Image(input.cpu())
             }, step=wandb.run.step)
-
-    
-    # Log the remaining misclassified examples for each class
-    for label, examples in misclassified_examples.items():
-        for input, original_idx in examples[10:]:
-            # Load the original image and the misclassified image
-            original_image = test_dataset[original_idx][0]
-            misclassified_image = input.cpu()
-
-            # Save the original image and misclassified image to W&B
-            wandb.log({
-                "original_image": wandb.Image(original_image),
-                "misclassified_image": wandb.Image(misclassified_image)
-            }, step=wandb.run.step)
-
 
 
 def main() -> None:
