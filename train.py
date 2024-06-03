@@ -4,8 +4,8 @@ import json
 from typing import Dict, Tuple
 import random
 import time
-import captum
-from captum.attr import IntegratedGradients, Occlusion, GradientShap
+from lime import lime_image
+from skimage.segmentation import mark_boundaries
 
 import wandb
 import torch
@@ -189,7 +189,7 @@ def train(
             if isinstance(handler, logging.FileHandler):
                 log_file.write(handler.stream.getvalue())
 
-def compute_interpretability(
+def compute_lime_interpretability(
     model: nn.Module,
     test_loader: DataLoader,
     device: str = "cuda" if torch.cuda.is_available() else "cpu",
@@ -197,34 +197,48 @@ def compute_interpretability(
     model.to(device)
     model.eval()
 
-    # Create interpretability instances
-    integrated_gradients = IntegratedGradients(model)
-    occlusion = Occlusion(model)
-    gradient_shap = GradientShap(model)
+    # Create a data transformation for LIME
+    data_transform = transforms.Compose(
+        [
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
 
     # Iterate over test dataset
-    for inputs, targets in tqdm(test_loader, desc="Computing interpretability"):
+    for inputs, targets in tqdm(test_loader, desc="Computing LIME interpretability"):
         inputs, targets = inputs.to(device), targets.to(device)
 
-        # Compute attributions
-        attributions_ig = integrated_gradients.attribute(inputs, target=targets, n_steps=50)
-        attributions_occ = occlusion.attribute(inputs, target=targets, sliding_window_shapes=(3, 8, 8))
-        attributions_shap = gradient_shap.attribute(inputs, target=targets, n_samples=50)
+        # Create a LIME explainer
+        explainer = lime_image.LimeImageExplainer()
 
-        # Save attributions to W&B
-        wandb.log(
-            {
-                "integrated_gradients": wandb.Image(attributions_ig[0]),
-                "occlusion": wandb.Image(attributions_occ[0]),
-                "gradient_shap": wandb.Image(attributions_shap[0]),
-            },
-            step=wandb.run.step,
+        # Compute LIME explanations
+        explanation = explainer.explain_instance(
+            np.transpose(inputs.cpu().numpy()[0], (1, 2, 0)),
+            model.eval().to(device),
+            top_labels=5,
+            hide_color=0,
+            num_samples=1000,
+            batch_size=100,
+            data_transform=data_transform,
         )
+
+        # Visualize the explanation
+        temp, mask = explanation.get_image_and_mask(
+            explanation.top_labels[0],
+            positive_only=False,
+            num_features=5,
+            hide_rest=False,
+        )
+        img_boundary = mark_boundaries(temp / 2 + 0.5, mask)
+
+        # Save the explanation to W&B
+        wandb.log({"lime_explanation": wandb.Image(img_boundary)}, step=wandb.run.step)
 
         # Break after a few examples (adjust as needed)
         if wandb.run.step > 10:
             break
-
 
 def main() -> None:
     output_dir = config["artifacts"]["output_dir"]
