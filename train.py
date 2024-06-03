@@ -4,8 +4,7 @@ import json
 from typing import Dict, Tuple
 import random
 import time
-from lime import lime_image
-from skimage.segmentation import mark_boundaries
+
 from captum.attr import IntegratedGradients
 import matplotlib.pyplot as plt
 
