@@ -204,6 +204,7 @@ def interpret_model(
     output_dir = "interpretation_results"
     os.makedirs(output_dir, exist_ok=True)
 
+    misclassified_count = 0
     for images, labels in tqdm(test_loader, desc="Computing Integrated Gradients"):
         images, labels = images.to(device), labels.to(device)
         outputs = model(images)
@@ -213,16 +214,19 @@ def interpret_model(
 
         attributions, delta = ig.attribute(images, target=labels, return_convergence_delta=True)
         for i in range(len(images)):
-            if misclassified[i]:
+            if misclassified[i] and misclassified_count < max_misclassified:
                 attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
                 plt.imshow(attr_img)
                 plt.axis('off')
-                img_path = os.path.join(output_dir, f"attr_{i}.png")
+                img_path = os.path.join(output_dir, f"attr_{misclassified_count}.png")
                 plt.savefig(img_path)
                 plt.close()
                 wandb.log({"interpretation": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}, Predicted: {predicted[i].item()}")]})
                 os.remove(img_path)
+                misclassified_count += 1
 
+        if misclassified_count >= max_misclassified:
+            break
 
 def main() -> None:
     output_dir = config["artifacts"]["output_dir"]
@@ -235,7 +239,7 @@ def main() -> None:
     # Create data loaders
     train_loader = DataLoader(train_dataset, batch_size=config["training"]["batch_size"], shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=config["training"]["batch_size"])
-    test_loader = DataLoader(test_dataset, batch_size=config["training"]["batch_size"])
+    test_loader = DataLoader(test_dataset, batch_size=8)
     # Create the model, optimizer, and loss function
     model, optimizer, loss_fn = create_model()
 
