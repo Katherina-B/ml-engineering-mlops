@@ -223,10 +223,10 @@ def compute_lime_interpretability(
         misclassified = (predicted != targets)
 
         # Compute LIME explanations and store misclassified examples
-        for input, target, misclassified_idx, original_idx in zip(inputs, targets, misclassified, test_dataset.indices):
+        for input, target, misclassified_idx in zip(inputs, targets, misclassified):
             if misclassified_idx:
                 # Store misclassified example
-                misclassified_examples[target.item()].append((input, original_idx))
+                misclassified_examples[target.item()].append(input)
 
                 # Compute and log LIME explanation if the class has less than 10 examples
                 if len(misclassified_examples[target.item()]) <= 10:
@@ -253,17 +253,21 @@ def compute_lime_interpretability(
                     )
                     img_boundary = mark_boundaries(temp / 2 + 0.5, mask)
 
-                    # Load the original image and the misclassified image
-                    original_image = test_dataset[original_idx][0]
-                    misclassified_image = input.cpu()
-
-                    # Save the explanation, original image, and misclassified image to W&B
+                    # Save the explanation and misclassified image to W&B
                     wandb.log({
                         "lime_explanation": wandb.Image(img_boundary),
-                        "original_image": wandb.Image(original_image),
-                        "misclassified_image": wandb.Image(misclassified_image)
+                        "misclassified_image": wandb.Image(input.cpu())
                     }, step=wandb.run.step)
 
+    # Log the remaining misclassified examples for each class
+    for label, examples in misclassified_examples.items():
+        for input in examples[10:]:
+            # Save the misclassified image to W&B
+            wandb.log({
+                "misclassified_image": wandb.Image(input.cpu())
+            }, step=wandb.run.step)
+
+    
     # Log the remaining misclassified examples for each class
     for label, examples in misclassified_examples.items():
         for input, original_idx in examples[10:]:
