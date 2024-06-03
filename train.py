@@ -192,6 +192,8 @@ def train(
 def compute_lime_interpretability(
     model: nn.Module,
     test_loader: DataLoader,
+    test_dataset: Dataset,
+    num_classes: int,
     device: str = "cuda" if torch.cuda.is_available() else "cpu",
 ):
     model.to(device)
@@ -206,39 +208,76 @@ def compute_lime_interpretability(
         ]
     )
 
+    # Initialize a dictionary to store misclassified examples for each class
+    misclassified_examples = {label: [] for label in range(num_classes)}
+
     # Iterate over test dataset
     for inputs, targets in tqdm(test_loader, desc="Computing LIME interpretability"):
         inputs, targets = inputs.to(device), targets.to(device)
 
-        # Create a LIME explainer
-        explainer = lime_image.LimeImageExplainer()
+        # Get model predictions
+        outputs = model(inputs)
+        _, predicted = outputs.max(1)
 
-        # Compute LIME explanations
-        explanation = explainer.explain_instance(
-            np.transpose(inputs.cpu().numpy()[0], (1, 2, 0)),
-            model.eval().to(device),
-            top_labels=5,
-            hide_color=0,
-            num_samples=1000,
-            batch_size=100,
-            data_transform=data_transform,
-        )
+        # Find misclassified examples
+        misclassified = (predicted != targets)
 
-        # Visualize the explanation
-        temp, mask = explanation.get_image_and_mask(
-            explanation.top_labels[0],
-            positive_only=False,
-            num_features=5,
-            hide_rest=False,
-        )
-        img_boundary = mark_boundaries(temp / 2 + 0.5, mask)
+        # Compute LIME explanations and store misclassified examples
+        for input, target, misclassified_idx, original_idx in zip(inputs, targets, misclassified, test_dataset.indices):
+            if misclassified_idx:
+                # Store misclassified example
+                misclassified_examples[target.item()].append((input, original_idx))
 
-        # Save the explanation to W&B
-        wandb.log({"lime_explanation": wandb.Image(img_boundary)}, step=wandb.run.step)
+                # Compute and log LIME explanation if the class has less than 10 examples
+                if len(misclassified_examples[target.item()]) <= 10:
+                    # Create a LIME explainer
+                    explainer = lime_image.LimeImageExplainer()
 
-        # Break after a few examples (adjust as needed)
-        if wandb.run.step > 10:
-            break
+                    # Compute LIME explanation
+                    explanation = explainer.explain_instance(
+                        np.transpose(input.cpu().numpy(), (1, 2, 0)),
+                        model.eval().to(device),
+                        top_labels=5,
+                        hide_color=0,
+                        num_samples=1000,
+                        batch_size=100,
+                        data_transform=data_transform,
+                    )
+
+                    # Visualize the explanation
+                    temp, mask = explanation.get_image_and_mask(
+                        explanation.top_labels[0],
+                        positive_only=False,
+                        num_features=5,
+                        hide_rest=False,
+                    )
+                    img_boundary = mark_boundaries(temp / 2 + 0.5, mask)
+
+                    # Load the original image and the misclassified image
+                    original_image = test_dataset[original_idx][0]
+                    misclassified_image = input.cpu()
+
+                    # Save the explanation, original image, and misclassified image to W&B
+                    wandb.log({
+                        "lime_explanation": wandb.Image(img_boundary),
+                        "original_image": wandb.Image(original_image),
+                        "misclassified_image": wandb.Image(misclassified_image)
+                    }, step=wandb.run.step)
+
+    # Log the remaining misclassified examples for each class
+    for label, examples in misclassified_examples.items():
+        for input, original_idx in examples[10:]:
+            # Load the original image and the misclassified image
+            original_image = test_dataset[original_idx][0]
+            misclassified_image = input.cpu()
+
+            # Save the original image and misclassified image to W&B
+            wandb.log({
+                "original_image": wandb.Image(original_image),
+                "misclassified_image": wandb.Image(misclassified_image)
+            }, step=wandb.run.step)
+
+
 
 def main() -> None:
     output_dir = config["artifacts"]["output_dir"]
