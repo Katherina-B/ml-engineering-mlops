@@ -296,7 +296,7 @@ def main() -> None:
 
     # Train the model
     train(model, optimizer, loss_fn, train_loader, val_loader, test_loader)
-    compute_lime_interpretability(model, test_loader)
+    compute_lime_interpretability(model, test_loader, test_dataset, 102)
 
     wandb.finish()
         
