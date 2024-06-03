@@ -50,9 +50,9 @@ def load_and_split_data(data_dir):
     data_dir = os.path.join(data_dir, "jpg")
 
     # Load and split the dataset
-    train_dataset = datasets.Flowers102(root=data_dir, split="train", transform=transform, download=True)
+    train_dataset = datasets.Flowers102(root=data_dir, split="test", transform=transform, download=True)
     val_dataset = datasets.Flowers102(root=data_dir, split="val", transform=transform, download=True)
-    test_dataset = datasets.Flowers102(root=data_dir, split="test", transform=transform, download=True)
+    test_dataset = datasets.Flowers102(root=data_dir, transform=transform, download=True)
 
     return train_dataset, val_dataset, test_dataset
 
