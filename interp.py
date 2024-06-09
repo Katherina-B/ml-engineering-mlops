@@ -50,6 +50,7 @@ def interpret_model(config):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model, optimizer, loss_fn = create_model()
     model = model.to(device)
+    
     ig = IntegratedGradients(model)
     output_dir = "interpretation_results"
     os.makedirs(output_dir, exist_ok=True)
@@ -57,6 +58,7 @@ def interpret_model(config):
         images, labels = images.to(device), labels.to(device)
         attributions, delta = ig.attribute(images, target=labels, return_convergence_delta=True)
         for i in range(len(images)):
+            images, labels = images.cpu(), labels.cpu()
             attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
             plt.imshow(attr_img)
             plt.axis('off')
