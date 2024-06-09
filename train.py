@@ -225,7 +225,7 @@ def interpret_model(
                 os.remove(img_path)
                 misclassified_count += 1
 
-        if misclassified_count >= max_misclassified:
+        if misclassified_count >= misclassified:
             break
 
 def main() -> None:
