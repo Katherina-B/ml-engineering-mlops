@@ -57,7 +57,7 @@ def interpret_model(config):
         _, preds = torch.max(outputs, 1)
         if preds != labels:
             incorrect_count += 1
-            if incorrect_count > 10:
+            if incorrect_count > 100:
                 break
             attributions, delta = ig.attribute(images, target=labels, return_convergence_delta=True)
             for i in range(len(images)):
