@@ -50,31 +50,38 @@ def interpret_model(config):
     ig = IntegratedGradients(model)
     output_dir = "interpretation_results"
     os.makedirs(output_dir, exist_ok=True)
+    incorrect_count = 0
     for images, labels in test_loader:
         images, labels = images.to(device), labels.to(device)
-        attributions, delta = ig.attribute(images, target=labels, return_convergence_delta=True)
-        for i in range(len(images)):
-            attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
-            attr_img = np.clip(attr_img, 0, 255).astype(np.uint8)  # Clip attribution values to [0, 255] range for integers
-            
-            # Save original input image
-            plt.figure()
-            plt.imshow(images[i].cpu().permute(1, 2, 0))
-            plt.axis('off')
-            img_path = os.path.join(output_dir, f"input_{i}.png")
-            plt.savefig(img_path)
-            plt.close()
-            wandb.log({"input_image": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
-            
-            # Save attribution map
-            plt.figure()
-            plt.imshow(attr_img)
-            plt.axis('off')
-            img_path = os.path.join(output_dir, f"attr_{i}.png")
-            plt.savefig(img_path)
-            plt.close()
-            wandb.log({"interpretation": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
-            os.remove(img_path)
+        outputs = model(images)
+        _, preds = torch.max(outputs, 1)
+        if preds != labels:
+            incorrect_count += 1
+            if incorrect_count > 10:
+                break
+            attributions, delta = ig.attribute(images, target=labels, return_convergence_delta=True)
+            for i in range(len(images)):
+                attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
+                attr_img = np.clip(attr_img, 0, 255).astype(np.uint8)  # Clip attribution values to [0, 255] range for integers
+                
+                # Save original input image
+                plt.figure()
+                plt.imshow(images[i].cpu().permute(1, 2, 0))
+                plt.axis('off')
+                img_path = os.path.join(output_dir, f"input_{incorrect_count}_{i}.png")
+                plt.savefig(img_path)
+                plt.close()
+                wandb.log({"input_image": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
+                
+                # Save attribution map
+                plt.figure()
+                plt.imshow(attr_img)
+                plt.axis('off')
+                img_path = os.path.join(output_dir, f"attr_{incorrect_count}_{i}.png")
+                plt.savefig(img_path)
+                plt.close()
+                wandb.log({"interpretation": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
+                os.remove(img_path)
             
 if __name__ == "__main__":
     interpret_model(config)
