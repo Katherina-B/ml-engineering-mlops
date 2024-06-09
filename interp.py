@@ -1,6 +1,5 @@
 import matplotlib
 matplotlib.use('agg')
-
 import os
 import torch
 from captum.attr import IntegratedGradients
@@ -43,7 +42,7 @@ wandb.init(
 
 def interpret_model(config):
     logger = logging.getLogger(__name__)
-    _, _, test_dataset = load_and_split_data(config["data"]["local_dir"])
+    *, *, test_dataset = load_and_split_data(config["data"]["local_dir"])
     test_loader = DataLoader(test_dataset, batch_size=1)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model, optimizer, loss_fn = create_model()
@@ -57,13 +56,25 @@ def interpret_model(config):
         for i in range(len(images)):
             attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
             attr_img = np.clip(attr_img, 0, 255).astype(np.uint8)  # Clip attribution values to [0, 255] range for integers
+            
+            # Save original input image
+            plt.figure()
+            plt.imshow(images[i].cpu().permute(1, 2, 0))
+            plt.axis('off')
+            img_path = os.path.join(output_dir, f"input_{i}.png")
+            plt.savefig(img_path)
+            plt.close()
+            wandb.log({"input_image": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
+            
+            # Save attribution map
+            plt.figure()
             plt.imshow(attr_img)
             plt.axis('off')
             img_path = os.path.join(output_dir, f"attr_{i}.png")
             plt.savefig(img_path)
-            plt.close()  
+            plt.close()
             wandb.log({"interpretation": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
-            os.remove(img_path)  
+            os.remove(img_path)
             
 if __name__ == "__main__":
     interpret_model(config)
