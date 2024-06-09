@@ -64,5 +64,7 @@ def interpret_model(config):
       os.remove(img_path)  
             
 if __name__ == "__main__":
-  interpret_model(config)
+    interpret_model(config)
+    wandb.finish()
+    
   
