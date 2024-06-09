@@ -56,6 +56,7 @@ def interpret_model(config):
         attributions, delta = ig.attribute(images, target=labels, return_convergence_delta=True)
         for i in range(len(images)):
             attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
+            attr_img = np.clip(attr_img, 0, 255).astype(np.uint8)  # Clip attribution values to [0, 255] range for integers
             plt.imshow(attr_img)
             plt.axis('off')
             img_path = os.path.join(output_dir, f"attr_{i}.png")
