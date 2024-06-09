@@ -29,6 +29,8 @@ import numpy as np
 with open("params.yaml", "r") as f:
     config = yaml.safe_load(f)
 
+ind = config["training"]["optimizer"]["lr"]
+
 wandb.init(
     # Set the project where this run will be logged
     project="lb5_intr",
