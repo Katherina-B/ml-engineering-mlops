@@ -44,7 +44,7 @@ wandb.init(
     })
 
 def interpret_model(config):
-  logger = setup_logger()
+  logger = logging.getLogger(__name__)
   _, _, test_dataset = load_and_split_data(config["data"]["local_dir"])
   test_loader = DataLoader(test_dataset, batch_size=1)
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
