@@ -44,26 +44,27 @@ wandb.init(
     })
 
 def interpret_model(config):
-  logger = logging.getLogger(__name__)
-  _, _, test_dataset = load_and_split_data(config["data"]["local_dir"])
-  test_loader = DataLoader(test_dataset, batch_size=1)
-  device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-  model, optimizer, loss_fn = create_model()
-  ig = IntegratedGradients(model)
-  output_dir = "interpretation_results"
-  os.makedirs(output_dir, exist_ok=True)
-  for images, labels in test_loader:
-    images, labels = images.to(device), labels.to(device)
-    attributions, delta = ig.attribute(images, target=labels, return_convergence_delta=True)
-    for i in range(len(images)):
-      attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
-      plt.imshow(attr_img)
-      plt.axis('off')
-      img_path = os.path.join(output_dir, f"attr_{i}.png")
-      plt.savefig(img_path)
-      plt.close()  
-      wandb.log({"interpretation": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
-      os.remove(img_path)  
+    logger = logging.getLogger(__name__)
+    _, _, test_dataset = load_and_split_data(config["data"]["local_dir"])
+    test_loader = DataLoader(test_dataset, batch_size=1)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model, optimizer, loss_fn = create_model()
+    model = model.to(device)
+    ig = IntegratedGradients(model)
+    output_dir = "interpretation_results"
+    os.makedirs(output_dir, exist_ok=True)
+    for images, labels in test_loader:
+        images, labels = images.to(device), labels.to(device)
+        attributions, delta = ig.attribute(images, target=labels, return_convergence_delta=True)
+        for i in range(len(images)):
+            attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
+            plt.imshow(attr_img)
+            plt.axis('off')
+            img_path = os.path.join(output_dir, f"attr_{i}.png")
+            plt.savefig(img_path)
+            plt.close()  
+            wandb.log({"interpretation": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
+            os.remove(img_path)  
             
 if __name__ == "__main__":
     interpret_model(config)
