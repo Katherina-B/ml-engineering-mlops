@@ -65,6 +65,10 @@ def interpret_model(config):
                 attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
                 attr_img = np.clip(attr_img, -1, 1)  # Clip attribution values to [-1, 1] range
 
+                # Ensure that the attribution map has the same shape as the original image
+                orig_img_shape = images[i].shape[1:]  # Get the height and width of the original image
+                attr_img = cv2.resize(attr_img, orig_img_shape[::-1])  # Resize the attribution map to match the original image shape
+
                 # Save original input image and attribution map side by side
                 fig, ax = plt.subplots(1, 2, figsize=(12, 6))
                 ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))
