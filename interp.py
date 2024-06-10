@@ -40,7 +40,7 @@ wandb.init(
         "epochs": config["training"]["epochs"],
     })
 
-from captum.attr import GradientShap
+from captum.attr import Deconvolution
 
 def interpret_model(config):
     logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ def interpret_model(config):
     model, optimizer, loss_fn = create_model()
     model = model.to(device)
 
-    gs = GradientShap(model)  # Initialize GradientShap
+    deconv = Deconvolution(model)  # Initialize Deconvolution
 
     output_dir = "interpretation_results"
     os.makedirs(output_dir, exist_ok=True)
@@ -63,8 +63,7 @@ def interpret_model(config):
             incorrect_count += 1
             if incorrect_count > 100:
                 break
-            baselines = torch.zeros_like(images)  # Create a baseline of all zeros
-            attributions = gs.attribute(images, baselines=baselines, target=labels, n_samples=50)  # Use GradientShap for attribution
+            attributions = deconv.attribute(images, target=labels)  # Use Deconvolution for attribution
 
             for i in range(len(images)):
                 attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
