@@ -35,6 +35,8 @@ wandb.init(
         "epochs": config["training"]["epochs"],
     })
 
+from captum.attr import Occlusion
+
 def interpret_model(config):
     logger = logging.getLogger(__name__)
     train_dataset, val_dataset, test_dataset = load_and_split_data(config["data"]["local_dir"])
@@ -43,22 +45,20 @@ def interpret_model(config):
     model, optimizer, loss_fn = create_model()
     model = model.to(device)
 
+    occlusion = Occlusion(model)  # Initialize Occlusion
+
     output_dir = "interpretation_results"
     os.makedirs(output_dir, exist_ok=True)
     incorrect_count = 0
     for images, labels in test_loader:
         images, labels = images.to(device), labels.to(device)
-        images.requires_grad_()
         outputs = model(images)
         _, preds = torch.max(outputs, 1)
         if preds != labels:
             incorrect_count += 1
             if incorrect_count > 100:
                 break
-            model.zero_grad()
-            loss = loss_fn(outputs, labels)
-            loss.backward()
-            attributions = images.grad  # Use Gradient * Input for attribution
+            attributions = occlusion.attribute(images, target=labels, strides=(3, 8, 8))  # Use Occlusion for attribution
 
             for i in range(len(images)):
                 attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
@@ -66,7 +66,7 @@ def interpret_model(config):
 
                 # Save original input image and attribution map side by side
                 fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-                ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))  # Detach the tensor before displaying
+                ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))
                 ax[0].axis('off')
                 ax[0].set_title('Original Image')
                 ax[1].imshow(attr_img)
