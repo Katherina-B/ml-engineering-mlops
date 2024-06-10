@@ -25,7 +25,7 @@ training:
 
 # Model configuration
 model:
-  name: InceptionV3
+  name: resnet50
   pretrained: True
   num_classes: 102
   freeze_base: False
