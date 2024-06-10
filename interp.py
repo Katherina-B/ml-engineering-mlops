@@ -58,7 +58,8 @@ def interpret_model(config):
             incorrect_count += 1
             if incorrect_count > 100:
                 break
-            attributions = occlusion.attribute(images, target=labels, strides=(3, 8, 8))  # Use Occlusion for attribution
+            sliding_window_shapes = (3, images.shape[-2] // 8, images.shape[-1] // 8)  # Define sliding window shapes
+            attributions = occlusion.attribute(images, target=labels, sliding_window_shapes=sliding_window_shapes, strides=(3, 8, 8))  # Use Occlusion for attribution
 
             for i in range(len(images)):
                 attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
