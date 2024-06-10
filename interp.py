@@ -18,7 +18,7 @@ import yaml
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import torchvision.models as models
-from load_data import load_and_split_data
+from load_date import load_and_split_data
 from train import create_model
 import numpy as np
 
