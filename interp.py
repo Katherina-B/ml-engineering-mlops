@@ -61,7 +61,7 @@ def interpret_model(config):
                 break
             attributions, delta = ig.attribute(images, target=labels, return_convergence_delta=True)
             for i in range(len(images)):
-                attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
+                attr_img = attr_img = (attributions[i].cpu().detach().numpy().transpose(1, 2, 0) / 255.0)
                 attr_img = np.clip(attr_img, 0, 255).astype(np.uint8)  # Clip attribution values to [0, 255] range for integers
                 
                 # Save original input image and attribution map side by side
