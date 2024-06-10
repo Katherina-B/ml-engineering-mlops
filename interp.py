@@ -63,7 +63,8 @@ def interpret_model(config):
             incorrect_count += 1
             if incorrect_count > 100:
                 break
-            attributions = gs.attribute(images, target=labels, n_samples=50)  # Use GradientShap for attribution
+            baselines = torch.zeros_like(images)  # Create a baseline of all zeros
+            attributions = gs.attribute(images, baselines=baselines, target=labels, n_samples=50)  # Use GradientShap for attribution
 
             for i in range(len(images)):
                 attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
