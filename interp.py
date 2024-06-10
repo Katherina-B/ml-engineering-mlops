@@ -40,14 +40,18 @@ wandb.init(
         "epochs": config["training"]["epochs"],
     })
 
+from captum.attr import GradientShap
+
 def interpret_model(config):
     logger = logging.getLogger(__name__)
-    _, _, test_dataset = load_and_split_data(config["data"]["local_dir"])
+    train_dataset, val_dataset, test_dataset = load_and_split_data(config["data"]["local_dir"])
     test_loader = DataLoader(test_dataset, batch_size=1)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model, optimizer, loss_fn = create_model()
     model = model.to(device)
-    ig = IntegratedGradients(model)
+
+    gs = GradientShap(model)  # Initialize GradientShap
+
     output_dir = "interpretation_results"
     os.makedirs(output_dir, exist_ok=True)
     incorrect_count = 0
@@ -57,13 +61,14 @@ def interpret_model(config):
         _, preds = torch.max(outputs, 1)
         if preds != labels:
             incorrect_count += 1
-            if incorrect_count > 1000:
+            if incorrect_count > 100:
                 break
-            attributions, delta = ig.attribute(images, target=labels, return_convergence_delta=True)
+            attributions = gs.attribute(images, target=labels, n_samples=50)  # Use GradientShap for attribution
+
             for i in range(len(images)):
-                attr_img = attr_img = (attributions[i].cpu().detach().numpy().transpose(1, 2, 0) / 255.0)
-                attr_img = np.clip(attr_img, 0, 255).astype(np.uint8)  # Clip attribution values to [0, 255] range for integers
-                
+                attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
+                attr_img = np.clip(attr_img, 0, 1)  # Clip attribution values to [0, 1] range
+
                 # Save original input image and attribution map side by side
                 fig, ax = plt.subplots(1, 2, figsize=(12, 6))
                 ax[0].imshow(images[i].cpu().permute(1, 2, 0))
@@ -77,7 +82,7 @@ def interpret_model(config):
                 plt.close()
                 wandb.log({"combined_image": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
                 os.remove(img_path)
-            
+
 if __name__ == "__main__":
     interpret_model(config)
     wandb.finish()
