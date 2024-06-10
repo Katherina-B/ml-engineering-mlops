@@ -66,7 +66,7 @@ def interpret_model(config):
 
                 # Save original input image and attribution map side by side
                 fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-                ax[0].imshow(images[i].cpu().permute(1, 2, 0))
+                ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))  # Detach the tensor before displaying
                 ax[0].axis('off')
                 ax[0].set_title('Original Image')
                 ax[1].imshow(attr_img)
