@@ -64,13 +64,14 @@ def interpret_model(config):
             for i in range(len(images)):
                 attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
                 attr_img = np.clip(attr_img, 0, 1)  # Clip attribution values to [0, 1] range
+                attr_img = (attr_img * 255).astype(np.uint8)  # Scale to [0, 255] range for uint8
 
                 # Save original input image and attribution map side by side
                 fig, ax = plt.subplots(1, 2, figsize=(12, 6))
                 ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))
                 ax[0].axis('off')
                 ax[0].set_title('Original Image')
-                ax[1].imshow(attr_img)
+                ax[1].imshow(attr_img, cmap='gray')  # Use grayscale colormap for attribution map
                 ax[1].axis('off')
                 ax[1].set_title('Attribution Map')
                 img_path = os.path.join(output_dir, f"combined_{incorrect_count}_{i}.png")
