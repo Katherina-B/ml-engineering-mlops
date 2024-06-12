@@ -39,7 +39,8 @@ from captum.attr import Occlusion
 
 def interpret_model(config):
     logger = logging.getLogger(__name__)
-    train_dataset, val_dataset, test_dataset = load_and_split_data(config["data"]["local_dir"])
+    train_dataset, val_dataset, test_dataset, image_names = load_and_split_data(config["data"]["local_dir"])
+    test_dataset = [(img, label, name) for (img, label), name in zip(test_dataset.samples, image_names)]
     test_loader = DataLoader(test_dataset, batch_size=1)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model, optimizer, loss_fn = create_model()
