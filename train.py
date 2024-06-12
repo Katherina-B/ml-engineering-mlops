@@ -199,7 +199,7 @@ def main() -> None:
     os.makedirs(output_dir, exist_ok=True)
     
     # Load and preprocess the dataset
-    train_dataset, val_dataset, test_dataset = load_and_split_data(config["data"]["local_dir"])
+    train_dataset, val_dataset, test_dataset, _ = load_and_split_data(config["data"]["local_dir"])
        
         
     # Create data loaders
