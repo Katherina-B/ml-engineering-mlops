@@ -1,5 +1,3 @@
-
-import cv2
 import matplotlib
 matplotlib.use('agg')
 import os
@@ -58,7 +56,7 @@ def interpret_model(config):
         _, preds = torch.max(outputs, 1)
         if preds != labels:
             incorrect_count += 1
-            if incorrect_count > 1024:
+            if incorrect_count > 100:
                 break
             sliding_window_shapes = (3, images.shape[-2] // 8, images.shape[-1] // 8)  # Define sliding window shapes
             attributions = occlusion.attribute(images, target=labels, sliding_window_shapes=sliding_window_shapes, strides=(3, 8, 8))  # Use Occlusion for attribution
@@ -66,10 +64,6 @@ def interpret_model(config):
             for i in range(len(images)):
                 attr_img = attributions[i].cpu().detach().numpy().transpose(1, 2, 0)
                 attr_img = np.clip(attr_img, -1, 1)  # Clip attribution values to [-1, 1] range
-
-                # Ensure that the attribution map has the same shape as the original image
-                orig_img_shape = images[i].shape[1:]  # Get the height and width of the original image
-                attr_img = cv2.resize(attr_img, orig_img_shape[::-1])  # Resize the attribution map to match the original image shape
 
                 # Save original input image and attribution map side by side
                 fig, ax = plt.subplots(1, 2, figsize=(12, 6))
