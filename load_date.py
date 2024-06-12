@@ -54,7 +54,9 @@ def load_and_split_data(data_dir):
     val_dataset = datasets.Flowers102(root=data_dir, split="val", transform=transform, download=True)
     test_dataset = datasets.Flowers102(root=data_dir, transform=transform, download=True)
 
-    return train_dataset, val_dataset, test_dataset
+    image_names = [os.path.basename(path) for path in train_dataset.samples]
+
+    return train_dataset, val_dataset, test_dataset, image_names
 
 
 if __name__ == "__main__":
