@@ -39,12 +39,13 @@ import matplotlib
 matplotlib.use('agg')
 import os
 import torch
-from captum.attr import GradCAM, Saliency
 from captum.attr import LayerGradCam, LayerAttribution
 import matplotlib.pyplot as plt
 import wandb
 import logging
 import numpy as np
+from load_data import load_and_split_data
+from train import create_model
 
 def interpret_model(config):
     logger = logging.getLogger(__name__)
@@ -54,8 +55,8 @@ def interpret_model(config):
     model, optimizer, loss_fn = create_model()
     model = model.to(device)
 
-    grad_cam = GradCAM(model)
-    saliency = Saliency(model)
+    grad_cam = LayerGradCam(model, model.layer4[-1])
+    saliency = LayerAttribution(model, model.layer4[-1])
 
     output_dir = "interpretation_results"
     os.makedirs(output_dir, exist_ok=True)
