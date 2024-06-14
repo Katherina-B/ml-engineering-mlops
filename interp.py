@@ -36,8 +36,7 @@ import matplotlib
 matplotlib.use('agg')
 import os
 import torch
-from captum.attr import LayerGradCam
-from captum.attr import Occlusion
+from captum.attr import LayerGradCam, Occlusion
 import matplotlib.pyplot as plt
 import wandb
 import logging
@@ -68,7 +67,7 @@ def interpret_model(config):
     os.makedirs(output_dir, exist_ok=True)
     incorrect_count = 0
 
-    for images, labels in test_loader:
+    for images, labels in zip(original_dataset, test_dataset):
         images, labels = images.to(device), labels.to(device)
         outputs = model(images)
         _, preds = torch.max(outputs, 1)
@@ -78,7 +77,10 @@ def interpret_model(config):
                 break
 
             grad_cam_attr = grad_cam.attribute(images, target=labels)
-            occlusion_attr = occlusion.attribute(images, target=labels)
+
+            # Specify the sliding_window_shapes for Occlusion
+            sliding_window_shapes = (3, images.shape[-2] // 8, images.shape[-1] // 8)
+            occlusion_attr = occlusion.attribute(images, target=labels, sliding_window_shapes=sliding_window_shapes)
 
             for i in range(len(images)):
                 attr_img_grad_cam = grad_cam_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
