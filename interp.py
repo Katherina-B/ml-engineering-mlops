@@ -46,6 +46,8 @@ def interpret_model(config):
     original_transform = transforms.Compose([
         transforms.ToTensor()
     ])
+    data_dir=config['data']['local_dir']
+    data_dir = os.path.join(data_dir, "jpg")
     logger = logging.getLogger(__name__)
     test_dataset = datasets.Flowers102(root=data_dir, split="test", transform=original_transform, download=True)
     test_loader = DataLoader(test_dataset, batch_size=1)
