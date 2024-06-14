@@ -67,7 +67,7 @@ def interpret_model(config):
     os.makedirs(output_dir, exist_ok=True)
     incorrect_count = 0
 
-    for i in range(len(images)):
+    for images, labels in test_loader:
         images, labels = images.to(device), labels.to(device)
         outputs = model(images)
         _, preds = torch.max(outputs, 1)
