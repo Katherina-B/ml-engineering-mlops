@@ -31,16 +31,20 @@ wandb.init(
     })
 
 
+
 import matplotlib
 matplotlib.use('agg')
 import os
 import torch
-from captum.attr import LayerGradCam, LayerAttribution
+from captum.attr import LayerGradCam
+from captum.attr import Occlusion
 import matplotlib.pyplot as plt
 import wandb
 import logging
 import numpy as np
 from train import create_model
+from skimage.segmentation import slic
+from lime import lime_image
 
 def interpret_model(config):
     original_transform = transforms.Compose([
@@ -49,6 +53,7 @@ def interpret_model(config):
     ])
     data_dir=config['data']['local_dir']
     data_dir = os.path.join(data_dir, "jpg")
+    
     logger = logging.getLogger(__name__)
     test_dataset = datasets.Flowers102(root=data_dir, split="test", transform=original_transform, download=True)
     test_loader = DataLoader(test_dataset, batch_size=1)
@@ -57,7 +62,7 @@ def interpret_model(config):
     model = model.to(device)
 
     grad_cam = LayerGradCam(model, model.layer4[-1])
-    saliency = LayerAttribution(model, model.layer4[-1])
+    occlusion = Occlusion(model)
 
     output_dir = "interpretation_results"
     os.makedirs(output_dir, exist_ok=True)
@@ -73,22 +78,30 @@ def interpret_model(config):
                 break
 
             grad_cam_attr = grad_cam.attribute(images, target=labels)
-            saliency_attr = saliency.interpolate(images, interpolate_dims=(2, 3))
+            occlusion_attr = occlusion.attribute(images, target=labels)
 
             for i in range(len(images)):
                 attr_img_grad_cam = grad_cam_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
-                attr_img_saliency = saliency_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
+                attr_img_occlusion = occlusion_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
 
-                fig, ax = plt.subplots(1, 3, figsize=(18, 6))
+                # Use LIME for interpretation
+                lime_explainer = lime_image.LimeImageExplainer()
+                explanation = lime_explainer.explain_instance(images[i].cpu().detach().permute(1, 2, 0).numpy(), model.predict, top_labels=5, hide_color=0, num_samples=1000)
+
+                fig, ax = plt.subplots(1, 4, figsize=(24, 6))
                 ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))
                 ax[0].axis('off')
                 ax[0].set_title('Original Image')
                 ax[1].imshow(attr_img_grad_cam, cmap='viridis')
                 ax[1].axis('off')
                 ax[1].set_title('Grad-CAM Attribution')
-                ax[2].imshow(attr_img_saliency, cmap='viridis')
+                ax[2].imshow(attr_img_occlusion, cmap='viridis')
                 ax[2].axis('off')
-                ax[2].set_title('Saliency Attribution')
+                ax[2].set_title('Occlusion Attribution')
+                lime_image = explanation.get_image_and_mask(explanation.top_labels[0], positive_only=True, num_features=5, hide_rest=True)
+                ax[3].imshow(lime_image)
+                ax[3].axis('off')
+                ax[3].set_title('LIME Explanation')
                 img_path = os.path.join(output_dir, f"combined_{incorrect_count}_{i}.png")
                 plt.savefig(img_path)
                 plt.close()
