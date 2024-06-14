@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 import torch
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
-
+from lime import lime_image
 
 with open("params.yaml", "r") as f:
     config = yaml.safe_load(f)
@@ -30,27 +30,12 @@ wandb.init(
         "epochs": config["training"]["epochs"],
     })
 
-
-
-import matplotlib
-matplotlib.use('agg')
-import os
-import torch
-from captum.attr import LayerGradCam, Occlusion
-import matplotlib.pyplot as plt
-import wandb
-import logging
-import numpy as np
-from train import create_model
-from skimage.segmentation import slic
-from lime import lime_image
-
 def interpret_model(config):
     original_transform = transforms.Compose([
         transforms.Resize((225, 225)),
         transforms.ToTensor()
     ])
-    data_dir=config['data']['local_dir']
+    data_dir = config['data']['local_dir']
     data_dir = os.path.join(data_dir, "jpg")
     
     logger = logging.getLogger(__name__)
@@ -88,10 +73,17 @@ def interpret_model(config):
 
                 # Use LIME for interpretation
                 lime_explainer = lime_image.LimeImageExplainer()
-                explanation = lime_explainer.explain_instance(images[i].cpu().detach().permute(1, 2, 0).numpy(), model.predict, top_labels=5, hide_color=0, num_samples=1000)
+
+                def predict_fn(input_image):
+                    with torch.no_grad():
+                        input_tensor = torch.from_numpy(input_image).permute(2, 0, 1).unsqueeze(0).float().to(device)
+                        output = model(input_tensor)
+                        _, predicted = torch.max(output.data, 1)
+                        return predicted.item()
+
+                explanation = lime_explainer.explain_instance(images[i].cpu().detach().permute(1, 2, 0).numpy(), predict_fn, top_labels=5, hide_color=0, num_samples=1000)
 
                 lime_image = explanation.get_image_and_mask(explanation.top_labels[0], positive_only=True, num_features=5, hide_rest=True)
-
 
                 fig, ax = plt.subplots(1, 4, figsize=(24, 6))
                 ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))
@@ -103,7 +95,6 @@ def interpret_model(config):
                 ax[2].imshow(attr_img_occlusion, cmap='viridis')
                 ax[2].axis('off')
                 ax[2].set_title('Occlusion Attribution')
-                lime_image = explanation.get_image_and_mask(explanation.top_labels[0], positive_only=True, num_features=5, hide_rest=True)
                 ax[3].imshow(lime_image)
                 ax[3].axis('off')
                 ax[3].set_title('LIME Explanation')
@@ -112,7 +103,6 @@ def interpret_model(config):
                 plt.close()
                 wandb.log({"combined_image": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
                 os.remove(img_path)
-
 
 if __name__ == "__main__":
     interpret_model(config)
