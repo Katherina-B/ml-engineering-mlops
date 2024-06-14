@@ -8,6 +8,8 @@ import wandb
 import logging
 import numpy as np
 import yaml
+from load_date import load_and_split_data
+from train import create_model
 
 with open("params.yaml", "r") as f:
     config = yaml.safe_load(f)
