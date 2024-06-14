@@ -90,6 +90,9 @@ def interpret_model(config):
                 lime_explainer = lime_image.LimeImageExplainer()
                 explanation = lime_explainer.explain_instance(images[i].cpu().detach().permute(1, 2, 0).numpy(), model.predict, top_labels=5, hide_color=0, num_samples=1000)
 
+                lime_image = explanation.get_image_and_mask(explanation.top_labels[0], positive_only=True, num_features=5, hide_rest=True)
+
+
                 fig, ax = plt.subplots(1, 4, figsize=(24, 6))
                 ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))
                 ax[0].axis('off')
