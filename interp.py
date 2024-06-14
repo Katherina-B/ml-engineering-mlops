@@ -40,6 +40,7 @@ import matplotlib.pyplot as plt
 import wandb
 import logging
 import numpy as np
+
 from train import create_model
 
 def interpret_model(config):
@@ -47,6 +48,8 @@ def interpret_model(config):
         transforms.ToTensor()
     ])
     logger = logging.getLogger(__name__)
+    destination_folder = config['data']['local_dir']
+    data_dir = os.path.join(destination_folder, "jpg")
     test_dataset = datasets.Flowers102(root=data_dir, split="test", transform=original_transform, download=True)
     test_loader = DataLoader(test_dataset, batch_size=1)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -70,7 +73,7 @@ def interpret_model(config):
                 break
 
             grad_cam_attr = grad_cam.attribute(images, target=labels)
-            saliency_attr = saliency.interpolate(images, target=labels)
+            saliency_attr = saliency.interpolate(images, labels)
 
             for i in range(len(images)):
                 attr_img_grad_cam = grad_cam_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
