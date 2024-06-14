@@ -40,7 +40,6 @@ import matplotlib.pyplot as plt
 import wandb
 import logging
 import numpy as np
-from load_data import load_and_split_data
 from train import create_model
 
 def interpret_model(config):
