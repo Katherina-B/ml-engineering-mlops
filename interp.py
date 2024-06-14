@@ -40,6 +40,7 @@ matplotlib.use('agg')
 import os
 import torch
 from captum.attr import GradCAM, Saliency
+from captum.attr import LayerGradCam, LayerAttribution
 import matplotlib.pyplot as plt
 import wandb
 import logging
