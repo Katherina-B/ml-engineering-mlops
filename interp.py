@@ -29,6 +29,18 @@ wandb.init(
     })
 
 
+import matplotlib
+matplotlib.use('agg')
+import os
+import torch
+from captum.attr import LayerGradCam, LayerAttribution
+import matplotlib.pyplot as plt
+import wandb
+import logging
+import numpy as np
+from load_data import load_and_split_data
+from train import create_model
+
 def interpret_model(config):
     logger = logging.getLogger(__name__)
     train_dataset, val_dataset, test_dataset = load_and_split_data(config["data"]["local_dir"])
@@ -54,7 +66,7 @@ def interpret_model(config):
                 break
 
             grad_cam_attr = grad_cam.attribute(images, target=labels)
-            saliency_attr = saliency.attribute_to_layer_input(images, target=labels)
+            saliency_attr = saliency.interpolate(images, target=labels)
 
             for i in range(len(images)):
                 attr_img_grad_cam = grad_cam_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
@@ -75,7 +87,6 @@ def interpret_model(config):
                 plt.close()
                 wandb.log({"combined_image": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
                 os.remove(img_path)
-
 if __name__ == "__main__":
     interpret_model(config)
     wandb.finish()
