@@ -3,6 +3,7 @@ matplotlib.use('agg')
 import os
 import torch
 from captum.attr import LayerGradCam, LayerAttribution
+from captum.attr import Occlusion
 import matplotlib.pyplot as plt
 import wandb
 import logging
