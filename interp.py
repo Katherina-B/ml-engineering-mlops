@@ -44,6 +44,7 @@ from train import create_model
 
 def interpret_model(config):
     original_transform = transforms.Compose([
+        transforms.Resize((225, 225)),
         transforms.ToTensor()
     ])
     data_dir=config['data']['local_dir']
