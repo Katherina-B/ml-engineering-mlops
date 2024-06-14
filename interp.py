@@ -2,24 +2,10 @@ import matplotlib
 matplotlib.use('agg')
 import os
 import torch
-from captum.attr import GradientShap
+from captum.attr import LayerGradCam, LayerAttribution
 import matplotlib.pyplot as plt
 import wandb
 import logging
-import json
-from typing import Dict, Tuple
-import random
-import time
-import torch.nn as nn
-import torch.optim as optim
-import torchvision.transforms as transforms
-import torchvision
-import yaml
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-import torchvision.models as models
-from load_date import load_and_split_data
-from train import create_model
 import numpy as np
 
 with open("params.yaml", "r") as f:
@@ -35,17 +21,6 @@ wandb.init(
         "epochs": config["training"]["epochs"],
     })
 
-import matplotlib
-matplotlib.use('agg')
-import os
-import torch
-from captum.attr import LayerGradCam, LayerAttribution
-import matplotlib.pyplot as plt
-import wandb
-import logging
-import numpy as np
-from load_data import load_and_split_data
-from train import create_model
 
 def interpret_model(config):
     logger = logging.getLogger(__name__)
