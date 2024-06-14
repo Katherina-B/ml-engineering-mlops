@@ -13,6 +13,8 @@ from train import create_model
 from torch.utils.data import DataLoader
 
 import torch
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
 
 
 with open("params.yaml", "r") as f:
@@ -42,8 +44,11 @@ from load_data import load_and_split_data
 from train import create_model
 
 def interpret_model(config):
+    original_transform = transforms.Compose([
+        transforms.ToTensor()
+    ])
     logger = logging.getLogger(__name__)
-    train_dataset, val_dataset, test_dataset = load_and_split_data(config["data"]["local_dir"])
+    test_dataset = datasets.Flowers102(root=data_dir, split="test", transform=original_transform, download=True)
     test_loader = DataLoader(test_dataset, batch_size=1)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model, optimizer, loss_fn = create_model()
