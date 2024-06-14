@@ -17,7 +17,7 @@ dvc = "^2.48.2"
 wandb = "0.17.0"
 captum = "0.7.0"
 lime = "0.2.0.1"
-
+scikit-image = "0.19.3"
 
 
 [tool.poetry.dev-dependencies]
