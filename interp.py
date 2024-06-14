@@ -73,7 +73,7 @@ def interpret_model(config):
                 break
 
             grad_cam_attr = grad_cam.attribute(images, target=labels)
-            saliency_attr = saliency.interpolate(images, target=labels)
+            saliency_attr = saliency.interpolate(images)
 
             for i in range(len(images)):
                 attr_img_grad_cam = grad_cam_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
