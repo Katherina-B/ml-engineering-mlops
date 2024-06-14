@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import wandb
 import logging
 import numpy as np
+import yaml
 
 with open("params.yaml", "r") as f:
     config = yaml.safe_load(f)
