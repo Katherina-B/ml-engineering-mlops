@@ -95,7 +95,10 @@ def interpret_model(config):
                 print("Warning: Sliding window shapes are not compatible with the input image dimensions.")
 
             for i in range(len(images)):
-                attr_img_grad_cam = grad_cam_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
+                # Upsample the Grad-CAM attribution to match the input image size
+                upsampled_grad_cam_attr = LayerAttribution.interpolate(grad_cam_attr, images.shape[-2], images.shape[-1])
+                attr_img_grad_cam = upsampled_grad_cam_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
+
                 attr_img_guided_backprop = guided_backprop_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
                 attr_img_integrated_gradients = integrated_gradients_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
                 attr_img_occlusion = occlusion_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
