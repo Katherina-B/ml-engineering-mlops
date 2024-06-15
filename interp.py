@@ -46,7 +46,7 @@ def interpret_model(config):
     data_dir = os.path.join(data_dir, "jpg")
     
     logger = logging.getLogger(__name__)
-    test_dataset = datasets.Flowers102(root=data_dir, split="test", transform=original_transform, download=True)
+    test_dataset = datasets.Flowers102(root=data_dir, split="train", transform=original_transform, download=True)
     test_loader = DataLoader(test_dataset, batch_size=1)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model, optimizer, loss_fn = create_model()
