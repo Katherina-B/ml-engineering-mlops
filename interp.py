@@ -32,7 +32,7 @@ wandb.init(
 
 def interpret_model(config):
     original_transform = transforms.Compose([
-        transforms.Resize((224, 224)),
+        transforms.Resize((224, 224)),  # Resize the input images to (224, 224)
         transforms.ToTensor()
     ])
     data_dir = config['data']['local_dir']
@@ -63,20 +63,27 @@ def interpret_model(config):
             if incorrect_count > 1024:
                 break
 
+            # Grad-CAM Attribution Computation
             grad_cam_attr = grad_cam.attribute(images, target=labels)
+
+            # Guided Backpropagation Attribution Computation
             guided_backprop_attr = guided_backprop.attribute(images, target=labels)
+            print(f"Guided Backpropagation attribution tensor shape: {guided_backprop_attr.shape}")  # Print shape for debugging
+
+            # Integrated Gradients Attribution Computation
             integrated_gradients_attr = integrated_gradients.attribute(images, target=labels, n_steps=50)
+            print(f"Integrated Gradients attribution tensor shape: {integrated_gradients_attr.shape}")  # Print shape for debugging
 
             # Specify the sliding_window_shapes for Occlusion
             sliding_window_shapes = (3, images.shape[-2] // 28, images.shape[-1] // 28)  # Set sliding window shapes to (3, 8, 8)
             occlusion_attr = occlusion.attribute(images, target=labels, sliding_window_shapes=sliding_window_shapes)
+            print(f"Occlusion attribution tensor shape: {occlusion_attr.shape}")  # Print shape for debugging
 
             # Check if the attribution tensors contain valid values
             if torch.isnan(guided_backprop_attr).any() or torch.isinf(guided_backprop_attr).any():
                 print("Warning: Guided Backpropagation attribution tensor contains NaN or infinity values.")
             if torch.isnan(integrated_gradients_attr).any() or torch.isinf(integrated_gradients_attr).any():
                 print("Warning: Integrated Gradients attribution tensor contains NaN or infinity values.")
-
             if torch.isnan(occlusion_attr).any() or torch.isinf(occlusion_attr).any():
                 print("Warning: Occlusion attribution tensor contains NaN or infinity values.")
 
@@ -92,6 +99,12 @@ def interpret_model(config):
                 attr_img_guided_backprop = guided_backprop_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
                 attr_img_integrated_gradients = integrated_gradients_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
                 attr_img_occlusion = occlusion_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
+
+                # Print attribution tensor shapes for comparison
+                print(f"Grad-CAM attribution tensor shape: {attr_img_grad_cam.shape}")
+                print(f"Guided Backpropagation attribution tensor shape: {attr_img_guided_backprop.shape}")
+                print(f"Integrated Gradients attribution tensor shape: {attr_img_integrated_gradients.shape}")
+                print(f"Occlusion attribution tensor shape: {attr_img_occlusion.shape}")
 
                 fig, ax = plt.subplots(1, 5, figsize=(30, 6))
                 ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))
