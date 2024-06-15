@@ -67,9 +67,25 @@ def interpret_model(config):
             guided_backprop_attr = guided_backprop.attribute(images, target=labels)
             integrated_gradients_attr = integrated_gradients.attribute(images, target=labels, n_steps=50)
 
+            # Check if the attribution tensors contain valid values
+            if torch.isnan(guided_backprop_attr).any() or torch.isinf(guided_backprop_attr).any():
+                print("Warning: Guided Backpropagation attribution tensor contains NaN or infinity values.")
+            if torch.isnan(integrated_gradients_attr).any() or torch.isinf(integrated_gradients_attr).any():
+                print("Warning: Integrated Gradients attribution tensor contains NaN or infinity values.")
+
             # Specify the sliding_window_shapes for Occlusion
             sliding_window_shapes = (3, images.shape[-2] // 8, images.shape[-1] // 8)
             occlusion_attr = occlusion.attribute(images, target=labels, sliding_window_shapes=sliding_window_shapes)
+
+            if torch.isnan(occlusion_attr).any() or torch.isinf(occlusion_attr).any():
+                print("Warning: Occlusion attribution tensor contains NaN or infinity values.")
+
+            # Check if the sliding window shapes are compatible with the input image dimensions
+            image_height, image_width = images.shape[-2], images.shape[-1]
+            window_height, window_width = sliding_window_shapes[1], sliding_window_shapes[2]
+
+            if image_height % window_height != 0 or image_width % window_width != 0:
+                print("Warning: Sliding window shapes are not compatible with the input image dimensions.")
 
             for i in range(len(images)):
                 attr_img_grad_cam = grad_cam_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
