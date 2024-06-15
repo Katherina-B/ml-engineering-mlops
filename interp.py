@@ -32,7 +32,7 @@ wandb.init(
 
 def interpret_model(config):
     original_transform = transforms.Compose([
-        transforms.Resize((225, 225)),
+        transforms.Resize((224, 224)),
         transforms.ToTensor()
     ])
     data_dir = config['data']['local_dir']
@@ -67,15 +67,15 @@ def interpret_model(config):
             guided_backprop_attr = guided_backprop.attribute(images, target=labels)
             integrated_gradients_attr = integrated_gradients.attribute(images, target=labels, n_steps=50)
 
+            # Specify the sliding_window_shapes for Occlusion
+            sliding_window_shapes = (3, images.shape[-2] // 28, images.shape[-1] // 28)  # Set sliding window shapes to (3, 8, 8)
+            occlusion_attr = occlusion.attribute(images, target=labels, sliding_window_shapes=sliding_window_shapes)
+
             # Check if the attribution tensors contain valid values
             if torch.isnan(guided_backprop_attr).any() or torch.isinf(guided_backprop_attr).any():
                 print("Warning: Guided Backpropagation attribution tensor contains NaN or infinity values.")
             if torch.isnan(integrated_gradients_attr).any() or torch.isinf(integrated_gradients_attr).any():
                 print("Warning: Integrated Gradients attribution tensor contains NaN or infinity values.")
-
-            # Specify the sliding_window_shapes for Occlusion
-            sliding_window_shapes = (3, images.shape[-2] // 8, images.shape[-1] // 8)
-            occlusion_attr = occlusion.attribute(images, target=labels, sliding_window_shapes=sliding_window_shapes)
 
             if torch.isnan(occlusion_attr).any() or torch.isinf(occlusion_attr).any():
                 print("Warning: Occlusion attribution tensor contains NaN or infinity values.")
