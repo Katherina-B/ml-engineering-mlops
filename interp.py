@@ -22,7 +22,7 @@ import torch
 from captum.attr import IntegratedGradients
 import matplotlib.pyplot as plt
 import wandb
-from model import ResNet50
+
 
 with open("params.yaml", "r") as f:
     config = yaml.safe_load(f)
