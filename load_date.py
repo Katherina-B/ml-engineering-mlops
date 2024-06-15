@@ -43,8 +43,7 @@ def load_and_split_data(data_dir):
     # Define data transformations
     transform = transforms.Compose([
         transforms.Resize((config["dataset"]["input_shape"][0], config["dataset"]["input_shape"][1])),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        transforms.ToTensor()
     ])
 
     data_dir = os.path.join(data_dir, "jpg")
