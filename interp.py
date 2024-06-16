@@ -69,14 +69,14 @@ def interpret_model(config):
 
             # Create a 3D tensor for Grad-CAM attribution interpolation
             input_tensor = torch.ones(1, device=device)
-            input_tensor_3d = input_tensor.expand(1, images.shape[-2] // 28, images.shape[-1] // 28)
-            output_tensor_3d = input_tensor_3d.clone().detach()
+            input_tensor_4d = input_tensor.expand(1, 1, images.shape[-2] // 28, images.shape[-1] // 28)
+            output_tensor_4d = input_tensor_4d.clone().detach()
 
-            input_tensor_3d = input_tensor_3d.detach().clone()
-            output_tensor_3d = output_tensor_3d.detach().clone()
+            input_tensor_4d = input_tensor_4d.detach().clone()
+            output_tensor_4d = output_tensor_4d.detach().clone()
 
             # Upsample the Grad-CAM attribution to match the input image size
-            upsampled_grad_cam_attr = LayerAttribution.interpolate(grad_cam_attr, input_tensor_3d, output_tensor_3d)
+            upsampled_grad_cam_attr = LayerAttribution.interpolate(grad_cam_attr, input_tensor_4d, output_tensor_4d)
             attr_img_grad_cam = upsampled_grad_cam_attr[0].cpu().detach().numpy()
 
             # Guided Backpropagation Attribution Computation
