@@ -138,4 +138,3 @@ def interpret_model(config):
 
 if __name__ == "__main__":
     interpret_model(config)
-    wandb.finish()
