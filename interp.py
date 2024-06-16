@@ -65,7 +65,7 @@ def interpret_model(config):
 
             # Grad-CAM Attribution Computation
             grad_cam_attr = grad_cam.attribute(images, target=labels)
-            grad_cam_attr = grad_cam_attr.squeeze(0)  # Reduce dimensionality to 3D
+            grad_cam_attr = grad_cam_attr.unsqueeze(0)  # Reduce dimensionality to 3D
 
             # Create a 4D tensor for Grad-CAM attribution interpolation
             input_tensor = torch.ones(1, device=device)
