@@ -67,6 +67,18 @@ def interpret_model(config):
             grad_cam_attr = grad_cam.attribute(images, target=labels)
             grad_cam_attr = grad_cam_attr.unsqueeze(1)  # Add an additional dimension for the channel
 
+            # Create a 3D tensor for Grad-CAM attribution interpolation
+            input_tensor = torch.ones(1, device=device)
+            input_tensor_3d = input_tensor.expand(1, images.shape[-2] // 28, images.shape[-1] // 28)
+            output_tensor_3d = input_tensor_3d.clone().detach()
+
+            input_tensor_3d = input_tensor_3d.detach().clone()
+            output_tensor_3d = output_tensor_3d.detach().clone()
+
+            # Upsample the Grad-CAM attribution to match the input image size
+            upsampled_grad_cam_attr = LayerAttribution.interpolate(grad_cam_attr, input_tensor_3d, output_tensor_3d)
+            attr_img_grad_cam = upsampled_grad_cam_attr[0, 0].cpu().detach().numpy()
+
             # Guided Backpropagation Attribution Computation
             guided_backprop_attr = guided_backprop.attribute(images, target=labels)
             print(f"Guided Backpropagation attribution tensor shape: {guided_backprop_attr.shape}")  # Print shape for debugging
@@ -96,10 +108,6 @@ def interpret_model(config):
                 print("Warning: Sliding window shapes are not compatible with the input image dimensions.")
 
             for i in range(len(images)):
-                # Upsample the Grad-CAM attribution to match the input image size
-                upsampled_grad_cam_attr = LayerAttribution.interpolate(grad_cam_attr, images.shape[-2], images.shape[-1])
-                attr_img_grad_cam = upsampled_grad_cam_attr[0, 0].cpu().detach().numpy()
-
                 attr_img_guided_backprop = guided_backprop_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
                 attr_img_integrated_gradients = integrated_gradients_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
                 attr_img_occlusion = occlusion_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
@@ -127,9 +135,6 @@ def interpret_model(config):
                 ax[4].axis('off')
                 ax[4].set_title('Occlusion Attribution')
                 img_path = os.path.join(output_dir, f"combined_{incorrect_count}_{i}.png")
-                plt.savefig(img_path)
-                wandb.log({"combined_image": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
-                os.remove(img_path)
 
 if __name__ == "__main__":
     interpret_model(config)
