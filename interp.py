@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 import torch
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
-from matplotlib import colorbar
+from matplotlib.pyplot import colorbar  # Corrected import
 
 with open("params.yaml", "r") as f:
     config = yaml.safe_load(f)
