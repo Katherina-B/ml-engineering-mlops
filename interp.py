@@ -39,7 +39,7 @@ def interpret_model(config):
     data_dir = os.path.join(data_dir, "jpg")
     
     logger = logging.getLogger(__name__)
-    test_dataset = datasets.Flowers102(root=data_dir, split="train", transform=original_transform, download=True)
+    test_dataset = datasets.Flowers102(root=data_dir, split="test", transform=original_transform, download=True)
     test_loader = DataLoader(test_dataset, batch_size=1)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model, optimizer, loss_fn = create_model()
@@ -65,6 +65,7 @@ def interpret_model(config):
 
             # Grad-CAM Attribution Computation
             grad_cam_attr = grad_cam.attribute(images, target=labels)
+            grad_cam_attr = grad_cam_attr.unsqueeze(1)  # Add an additional dimension for the channel
 
             # Guided Backpropagation Attribution Computation
             guided_backprop_attr = guided_backprop.attribute(images, target=labels)
@@ -97,7 +98,7 @@ def interpret_model(config):
             for i in range(len(images)):
                 # Upsample the Grad-CAM attribution to match the input image size
                 upsampled_grad_cam_attr = LayerAttribution.interpolate(grad_cam_attr, images.shape[-2], images.shape[-1])
-                attr_img_grad_cam = upsampled_grad_cam_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
+                attr_img_grad_cam = upsampled_grad_cam_attr[0, 0].cpu().detach().numpy()
 
                 attr_img_guided_backprop = guided_backprop_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
                 attr_img_integrated_gradients = integrated_gradients_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
