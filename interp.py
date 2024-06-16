@@ -65,7 +65,7 @@ def interpret_model(config):
 
             # Grad-CAM Attribution Computation
             grad_cam_attr = grad_cam.attribute(images, target=labels)
-            grad_cam_attr = grad_cam_attr.unsqueeze(1)  # Add an additional dimension for the channel
+            grad_cam_attr = grad_cam_attr.squeeze(0)  # Reduce dimensionality to 3D
 
             # Create a 3D tensor for Grad-CAM attribution interpolation
             input_tensor = torch.ones(1, device=device)
@@ -77,7 +77,7 @@ def interpret_model(config):
 
             # Upsample the Grad-CAM attribution to match the input image size
             upsampled_grad_cam_attr = LayerAttribution.interpolate(grad_cam_attr, input_tensor_3d, output_tensor_3d)
-            attr_img_grad_cam = upsampled_grad_cam_attr[0, 0].cpu().detach().numpy()
+            attr_img_grad_cam = upsampled_grad_cam_attr[0].cpu().detach().numpy()
 
             # Guided Backpropagation Attribution Computation
             guided_backprop_attr = guided_backprop.attribute(images, target=labels)
@@ -134,6 +134,7 @@ def interpret_model(config):
                 ax[4].imshow(attr_img_occlusion, cmap='viridis')
                 ax[4].axis('off')
                 ax[4].set_title('Occlusion Attribution')
+                img_path = os.path.join(output_dir, f"combined_{incorrect_count
                 img_path = os.path.join(output_dir, f"combined_{incorrect_count}_{i}.png")
 
 if __name__ == "__main__":
