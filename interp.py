@@ -2,7 +2,7 @@ import matplotlib
 matplotlib.use('agg')
 import os
 import torch
-from captum.attr import LayerGradCam, LayerAttribution, GuidedBackprop, IntegratedGradients
+from captum.attr import LayerGradCam, LayerAttribution
 from captum.attr import Occlusion
 import matplotlib.pyplot as plt
 import wandb
@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader
 import torch
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+from lime import lime_image
 
 with open("params.yaml", "r") as f:
     config = yaml.safe_load(f)
@@ -32,7 +33,7 @@ wandb.init(
 
 def interpret_model(config):
     original_transform = transforms.Compose([
-        transforms.Resize((224, 224)),  # Resize the input images to (224, 224)
+        transforms.Resize((225, 225)),
         transforms.ToTensor()
     ])
     data_dir = config['data']['local_dir']
@@ -46,8 +47,6 @@ def interpret_model(config):
     model = model.to(device)
 
     grad_cam = LayerGradCam(model, model.layer4[-1])
-    guided_backprop = GuidedBackprop(model)
-    integrated_gradients = IntegratedGradients(model)
     occlusion = Occlusion(model)
 
     output_dir = "interpretation_results"
@@ -63,77 +62,48 @@ def interpret_model(config):
             if incorrect_count > 1024:
                 break
 
-            # Grad-CAM Attribution Computation
             grad_cam_attr = grad_cam.attribute(images, target=labels)
-            
-            
-            # Create a 4D tensor for Grad-CAM attribution interpolation
-            input_tensor = torch.ones(1, device=device)
-            input_tensor_4d = input_tensor.expand(1, 1, images.shape[-2] // 28, images.shape[-1] // 28)
-            output_tensor_4d = input_tensor_4d.clone().detach()
-
-            # Upsample the Grad-CAM attribution to match the input image size
-            upsampled_grad_cam_attr = LayerAttribution.interpolate(grad_cam_attr, input_tensor_4d, output_tensor_4d)
-            attr_img_grad_cam = upsampled_grad_cam_attr.squeeze(0).cpu().detach().numpy()
-
-            # Guided Backpropagation Attribution Computation
-            guided_backprop_attr = guided_backprop.attribute(images, target=labels)
-            print(f"Guided Backpropagation attribution tensor shape: {guided_backprop_attr.shape}")  # Print shape for debugging
-
-            # Integrated Gradients Attribution Computation
-            integrated_gradients_attr = integrated_gradients.attribute(images, target=labels, n_steps=50)
-            print(f"Integrated Gradients attribution tensor shape: {integrated_gradients_attr.shape}")  # Print shape for debugging
 
             # Specify the sliding_window_shapes for Occlusion
-            sliding_window_shapes = (3, images.shape[-2] // 28, images.shape[-1] // 28)  # Set sliding window shapes to (3, 8, 8)
+            sliding_window_shapes = (3, images.shape[-2] // 8, images.shape[-1] // 8)
             occlusion_attr = occlusion.attribute(images, target=labels, sliding_window_shapes=sliding_window_shapes)
-            print(f"Occlusion attribution tensor shape: {occlusion_attr.shape}")  # Print shape for debugging
-
-            # Check if the attribution tensors contain valid values
-            if torch.isnan(guided_backprop_attr).any() or torch.isinf(guided_backprop_attr).any():
-                print("Warning: Guided Backpropagation attribution tensor contains NaN or infinity values.")
-            if torch.isnan(integrated_gradients_attr).any() or torch.isinf(integrated_gradients_attr).any():
-                print("Warning: Integrated Gradients attribution tensor contains NaN or infinity values.")
-            if torch.isnan(occlusion_attr).any() or torch.isinf(occlusion_attr).any():
-                print("Warning: Occlusion attribution tensor contains NaN or infinity values.")
-
-            # Check if the sliding window shapes are compatible with the input image dimensions
-            image_height, image_width = images.shape[-2], images.shape[-1]
-            window_height, window_width = sliding_window_shapes[1], sliding_window_shapes[2]
-
-            if image_height % window_height != 0 or image_width % window_width != 0:
-                print("Warning: Sliding window shapes are not compatible with the input image dimensions.")
 
             for i in range(len(images)):
-                attr_img_guided_backprop = guided_backprop_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
-                attr_img_integrated_gradients = integrated_gradients_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
+                attr_img_grad_cam = grad_cam_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
                 attr_img_occlusion = occlusion_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
 
-                # Print attribution tensor shapes for comparison
-                print(f"Grad-CAM attribution tensor shape: {attr_img_grad_cam.shape}")
-                print(f"Guided Backpropagation attribution tensor shape: {attr_img_guided_backprop.shape}")
-                print(f"Integrated Gradients attribution tensor shape: {attr_img_integrated_gradients.shape}")
-                print(f"Occlusion attribution tensor shape: {attr_img_occlusion.shape}")
+                # Use LIME for interpretation
+                lime_explainer = lime_image.LimeImageExplainer()
 
-                fig, ax = plt.subplots(1, 5, figsize=(30, 6))
+                def predict_fn(input_image):
+                    with torch.no_grad():
+                        input_tensor = torch.from_numpy(input_image).permute(2, 0, 1).unsqueeze(0).float().to(device)
+                        output = model(input_tensor)
+                        _, predicted = torch.max(output.data, 1)
+                        return predicted.item()
+
+                explanation = lime_explainer.explain_instance(images[i].cpu().detach().permute(1, 2, 0).numpy(), predict_fn, top_labels=5, hide_color=0, num_samples=1000)
+
+                lime_image = explanation.get_image_and_mask(explanation.top_labels[0], positive_only=True, num_features=5, hide_rest=True)
+
+                fig, ax = plt.subplots(1, 4, figsize=(24, 6))
                 ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))
                 ax[0].axis('off')
                 ax[0].set_title('Original Image')
                 ax[1].imshow(attr_img_grad_cam, cmap='viridis')
                 ax[1].axis('off')
                 ax[1].set_title('Grad-CAM Attribution')
-                ax[2].imshow(attr_img_guided_backprop, cmap='viridis')
+                ax[2].imshow(attr_img_occlusion, cmap='viridis')
                 ax[2].axis('off')
-                ax[2].set_title('Guided Backpropagation Attribution')
-                ax[3].imshow(attr_img_integrated_gradients, cmap='viridis')
+                ax[2].set_title('Occlusion Attribution')
+                ax[3].imshow(lime_image)
                 ax[3].axis('off')
-                ax[3].set_title('Integrated Gradients Attribution')
-                ax[4].imshow(attr_img_occlusion, cmap='viridis')
-                ax[4].axis('off')
-                ax[4].set_title('Occlusion Attribution')
+                ax[3].set_title('LIME Explanation')
                 img_path = os.path.join(output_dir, f"combined_{incorrect_count}_{i}.png")
-                plt.savefig(img_path, bbox_inches='tight')
+                plt.savefig(img_path)
                 plt.close()
+                wandb.log({"combined_image": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
+                os.remove(img_path)
 
 if __name__ == "__main__":
     interpret_model(config)
