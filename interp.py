@@ -134,7 +134,6 @@ def interpret_model(config):
                 ax[4].imshow(attr_img_occlusion, cmap='viridis')
                 ax[4].axis('off')
                 ax[4].set_title('Occlusion Attribution')
-                img_path = os.path.join(output_dir, f"combined_{incorrect_count
                 img_path = os.path.join(output_dir, f"combined_{incorrect_count}_{i}.png")
 
 if __name__ == "__main__":
