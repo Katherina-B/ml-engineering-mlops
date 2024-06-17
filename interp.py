@@ -80,7 +80,7 @@ def interpret_model(config):
 
             fig, ax = plt.subplots(1, 3, figsize=(24, 6))
             
-            ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))
+            ax[0].imshow(images[0].cpu().detach().permute(1, 2, 0))
             ax[0].axis('off')
             ax[0].set_title('Original Image')
 
@@ -112,7 +112,7 @@ def interpret_model(config):
     for i, (images, labels, preds) in enumerate(correct_predictions):
         img_path = os.path.join(correct_dir, f"correct_{i}.png")
         plt.figure()
-        plt.imshow(images.cpu().detach().permute(1, 2, 0))
+        plt.imshow(images[0].cpu().detach().permute(1, 2, 0))
         plt.axis('off')
         plt.title(f"Label: {labels.item()}, Prediction: {preds.item()}")
         plt.savefig(img_path)
@@ -121,7 +121,7 @@ def interpret_model(config):
     for i, (images, labels, preds) in enumerate(incorrect_predictions):
         img_path = os.path.join(incorrect_dir, f"incorrect_{i}.png")
         plt.figure()
-        plt.imshow(images.cpu().detach().permute(1, 2, 0))
+        plt.imshow(images[0].cpu().detach().permute(1, 2, 0))
         plt.axis('off')
         plt.title(f"Label: {labels.item()}, Prediction: {preds.item()}")
         plt.savefig(img_path)
