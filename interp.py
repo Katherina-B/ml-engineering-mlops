@@ -17,7 +17,6 @@ import torchvision.datasets as datasets
 from matplotlib.pyplot import colorbar
 import matplotlib.cm as cm
 
-
 with open("params.yaml", "r") as f:
     config = yaml.safe_load(f)
 
@@ -77,7 +76,7 @@ def interpret_model(config):
             attr_img_saliency = saliency_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
 
             # Нормалізувати атрибуцію градієнта для відображення як теплову карту
-            attr_img_grad_cam = np.uint8(cm.jet(attr_img_grad_cam)[..., :3] * 255)
+            attr_img_grad_cam = np.uint8(cm.jet(attr_img_grad_cam.squeeze())[..., :3] * 255)
 
             fig, ax = plt.subplots(1, 3, figsize=(24, 6))
             
@@ -90,9 +89,8 @@ def interpret_model(config):
             ax[1].set_title('Grad-CAM Attribution')
             colorbar(im, ax=ax[1])
 
-            
             im = ax[2].imshow(attr_img_saliency, cmap='viridis')
-            ax[3].axis('off')
+            ax[2].axis('off')
             ax[2].set_title('Saliency Attribution')
             colorbar(im, ax=ax[2])
 
