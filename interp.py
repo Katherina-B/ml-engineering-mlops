@@ -9,7 +9,6 @@ import logging
 import numpy as np
 import yaml
 from load_date import load_and_split_data
-from train import create_model
 from torch.utils.data import DataLoader
 import torch
 import torchvision.transforms as transforms
@@ -40,16 +39,23 @@ def interpret_model(config):
     data_dir = config['data']['local_dir']
     data_dir = os.path.join(data_dir, "jpg")
     logger = logging.getLogger(__name__)
-    test_dataset = datasets.Flowers102(root=data_dir, split="test", transform=original_transform, download=True)
+    test_dataset = datasets.Flowers102(root=data_dir, split="train", transform=original_transform, download=True)
     test_loader = DataLoader(test_dataset, batch_size=1)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model, optimizer, loss_fn = create_model()
+
+    # Завантажити попередньо навчену модель
+    model_path = os.path.join(config["artifacts"]["output_dir"], "best_model.pth")
+    model = torch.load(model_path)
     model = model.to(device)
+    model.eval()  # Перевести модель у режим оцінювання
+
     grad_cam = LayerGradCam(model, model.layer4[-1])
     saliency = LayerAttribution(model, model.layer4[-1])
     output_dir = "interpretation_results"
     os.makedirs(output_dir, exist_ok=True)
-    incorrect_count = 0
+
+    correct_predictions = []
+    incorrect_predictions = []
 
     for images, labels in test_loader:
         images, labels = images.to(device), labels.to(device)
@@ -57,10 +63,10 @@ def interpret_model(config):
         _, preds = torch.max(outputs, 1)
         correct_prediction = (preds == labels).item()
 
-        if not correct_prediction:
-            incorrect_count += 1
-            if incorrect_count > 1024:
-                break
+        if correct_prediction:
+            correct_predictions.append((images, labels, preds))
+        else:
+            incorrect_predictions.append((images, labels, preds))
 
         grad_cam_attr = grad_cam.attribute(images, target=labels)
         saliency_attr = saliency.interpolate(images, interpolate_dims=(2, 3))
@@ -72,7 +78,7 @@ def interpret_model(config):
             # Нормалізувати атрибуцію градієнта для відображення як теплову карту
             attr_img_grad_cam = np.uint8(cm.jet(attr_img_grad_cam)[..., :3] * 255)
 
-            fig, ax = plt.subplots(1, 4, figsize=(24, 6))
+            fig, ax = plt.subplots(1, 3, figsize=(24, 6))
             ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))
             ax[0].axis('off')
             ax[0].set_title('Original Image')
@@ -82,28 +88,44 @@ def interpret_model(config):
             ax[1].set_title('Grad-CAM Attribution')
             colorbar(im, ax=ax[1])
 
-            # Накласти теплову карту Grad-CAM на вихідне зображення
-            orig_img = images[i].cpu().detach().permute(1, 2, 0).numpy()
-            heatmap = cv2.applyColorMap(cv2.resize(attr_img_grad_cam, (orig_img.shape[1], orig_img.shape[0])), cv2.COLORMAP_JET)
-            img_with_heatmap = np.float32(heatmap) * 0.3 + np.float32(orig_img)
-            img_with_heatmap = img_with_heatmap / np.max(img_with_heatmap)
-            ax[2].imshow(img_with_heatmap)
-            ax[2].axis('off')
-            ax[2].set_title('Original Image with Grad-CAM Heatmap')
-
-            im = ax[3].imshow(attr_img_saliency, cmap='viridis')
+            
+            im = ax[2].imshow(attr_img_saliency, cmap='viridis')
             ax[3].axis('off')
-            ax[3].set_title('Saliency Attribution')
-            colorbar(im, ax=ax[3])
+            ax[2].set_title('Saliency Attribution')
+            colorbar(im, ax=ax[2])
 
             prediction_label = 'Correct' if correct_prediction else 'Incorrect'
-            img_path = os.path.join(output_dir, f"combined_{incorrect_count}_{i}_{prediction_label}.png")
+            img_path = os.path.join(output_dir, f"combined_{prediction_label}_{i}.png")
             plt.suptitle(f'Prediction: {prediction_label}', fontsize=16)
             plt.savefig(img_path)
             plt.close()
 
             wandb.log({"combined_image": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
             os.remove(img_path)
+
+    # Зберегти правильно та неправильно класифіковані зображення в окремих директоріях
+    correct_dir = os.path.join(output_dir, "correct_predictions")
+    incorrect_dir = os.path.join(output_dir, "incorrect_predictions")
+    os.makedirs(correct_dir, exist_ok=True)
+    os.makedirs(incorrect_dir, exist_ok=True)
+
+    for i, (images, labels, preds) in enumerate(correct_predictions):
+        img_path = os.path.join(correct_dir, f"correct_{i}.png")
+        plt.figure()
+        plt.imshow(images.cpu().detach().permute(1, 2, 0))
+        plt.axis('off')
+        plt.title(f"Label: {labels.item()}, Prediction: {preds.item()}")
+        plt.savefig(img_path)
+        plt.close()
+
+    for i, (images, labels, preds) in enumerate(incorrect_predictions):
+        img_path = os.path.join(incorrect_dir, f"incorrect_{i}.png")
+        plt.figure()
+        plt.imshow(images.cpu().detach().permute(1, 2, 0))
+        plt.axis('off')
+        plt.title(f"Label: {labels.item()}, Prediction: {preds.item()}")
+        plt.savefig(img_path)
+        plt.close()
 
 if __name__ == "__main__":
     interpret_model(config)
