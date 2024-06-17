@@ -9,6 +9,7 @@ import logging
 import numpy as np
 import yaml
 from load_date import load_and_split_data
+from train import create_model
 from torch.utils.data import DataLoader
 import torch
 import torchvision.transforms as transforms
