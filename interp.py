@@ -15,7 +15,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from matplotlib.pyplot import colorbar
 import matplotlib.cm as cm
-import cv2
+
 
 with open("params.yaml", "r") as f:
     config = yaml.safe_load(f)
