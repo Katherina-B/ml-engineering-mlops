@@ -44,11 +44,9 @@ def interpret_model(config):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model, _, _ = create_model()
-
-    # Завантажити попередньо навчену модель
-    model_path = os.path.join(config["artifacts"]["output_dir"], "best_model.pth")
-    model = torch.load(model_path)
-    model = model.to(device)
+    model.load_state_dict(torch.load(config["artifacts"]["output_dir"] + "/best_model.pth"))
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model.to(device)
     model.eval()  # Перевести модель у режим оцінювання
 
     grad_cam = LayerGradCam(model, model.layer4[-1])
