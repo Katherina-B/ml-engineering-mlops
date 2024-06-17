@@ -43,6 +43,8 @@ def interpret_model(config):
     test_loader = DataLoader(test_dataset, batch_size=1)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    model, _, _ = create_model()
+
     # Завантажити попередньо навчену модель
     model_path = os.path.join(config["artifacts"]["output_dir"], "best_model.pth")
     model = torch.load(model_path)
