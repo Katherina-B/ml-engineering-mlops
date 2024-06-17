@@ -14,10 +14,11 @@ from torch.utils.data import DataLoader
 import torch
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
-from matplotlib.pyplot import colorbar  # Corrected import
+from matplotlib.pyplot import colorbar
 
 with open("params.yaml", "r") as f:
     config = yaml.safe_load(f)
+
 ind = config["training"]["optimizer"]["lr"]
 wandb.init(
     project="lb5_intr",
@@ -33,7 +34,7 @@ def interpret_model(config):
         transforms.Resize((225, 225)),
         transforms.ToTensor()
     ])
-    data_dir=config['data']['local_dir']
+    data_dir = config['data']['local_dir']
     data_dir = os.path.join(data_dir, "jpg")
     logger = logging.getLogger(__name__)
     test_dataset = datasets.Flowers102(root=data_dir, split="test", transform=original_transform, download=True)
@@ -46,16 +47,21 @@ def interpret_model(config):
     output_dir = "interpretation_results"
     os.makedirs(output_dir, exist_ok=True)
     incorrect_count = 0
+
     for images, labels in test_loader:
         images, labels = images.to(device), labels.to(device)
         outputs = model(images)
         _, preds = torch.max(outputs, 1)
-        if preds != labels:
+        correct_prediction = (preds == labels).item()  # Перевірка, чи передбачення є правильним
+
+        if not correct_prediction:
             incorrect_count += 1
             if incorrect_count > 1024:
                 break
+
             grad_cam_attr = grad_cam.attribute(images, target=labels)
             saliency_attr = saliency.interpolate(images, interpolate_dims=(2, 3))
+
             for i in range(len(images)):
                 attr_img_grad_cam = grad_cam_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
                 attr_img_saliency = saliency_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
@@ -63,19 +69,17 @@ def interpret_model(config):
                 ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))
                 ax[0].axis('off')
                 ax[0].set_title('Original Image')
-
                 im = ax[1].imshow(attr_img_grad_cam, cmap='viridis')
                 ax[1].axis('off')
                 ax[1].set_title('Grad-CAM Attribution')
                 colorbar(im, ax=ax[1])
-
                 im = ax[2].imshow(attr_img_saliency, cmap='viridis')
                 ax[2].axis('off')
                 ax[2].set_title('Saliency Attribution')
                 colorbar(im, ax=ax[2])
-
                 ax[3].axis('off')
-
+                prediction_label = 'Correct' if correct_prediction else 'Incorrect'
+                ax[3].set_title(f'Prediction: {prediction_label}')
                 img_path = os.path.join(output_dir, f"combined_{incorrect_count}_{i}.png")
                 plt.savefig(img_path)
                 plt.close()
