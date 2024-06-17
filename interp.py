@@ -80,6 +80,7 @@ def interpret_model(config):
             attr_img_grad_cam = np.uint8(cm.jet(attr_img_grad_cam)[..., :3] * 255)
 
             fig, ax = plt.subplots(1, 3, figsize=(24, 6))
+            
             ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))
             ax[0].axis('off')
             ax[0].set_title('Original Image')
