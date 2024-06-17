@@ -8,13 +8,15 @@ import wandb
 import logging
 import numpy as np
 import yaml
-from load_date import load_and_split_data
+from load_data import load_and_split_data
 from train import create_model
 from torch.utils.data import DataLoader
 import torch
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from matplotlib.pyplot import colorbar
+import matplotlib.cm as cm
+import cv2
 
 with open("params.yaml", "r") as f:
     config = yaml.safe_load(f)
@@ -27,7 +29,8 @@ wandb.init(
         "learning_rate": config["training"]["optimizer"],
         "dataset": "Flower-102",
         "epochs": config["training"]["epochs"],
-    })
+    }
+)
 
 def interpret_model(config):
     original_transform = transforms.Compose([
@@ -52,39 +55,55 @@ def interpret_model(config):
         images, labels = images.to(device), labels.to(device)
         outputs = model(images)
         _, preds = torch.max(outputs, 1)
-        correct_prediction = (preds == labels).item()  # Перевірка, чи передбачення є правильним
+        correct_prediction = (preds == labels).item()
 
         if not correct_prediction:
             incorrect_count += 1
             if incorrect_count > 1024:
                 break
 
-            grad_cam_attr = grad_cam.attribute(images, target=labels)
-            saliency_attr = saliency.interpolate(images, interpolate_dims=(2, 3))
+        grad_cam_attr = grad_cam.attribute(images, target=labels)
+        saliency_attr = saliency.interpolate(images, interpolate_dims=(2, 3))
 
-            for i in range(len(images)):
-                attr_img_grad_cam = grad_cam_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
-                attr_img_saliency = saliency_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
-                fig, ax = plt.subplots(1, 4, figsize=(24, 6))
-                ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))
-                ax[0].axis('off')
-                ax[0].set_title('Original Image')
-                im = ax[1].imshow(attr_img_grad_cam, cmap='viridis')
-                ax[1].axis('off')
-                ax[1].set_title('Grad-CAM Attribution')
-                colorbar(im, ax=ax[1])
-                im = ax[2].imshow(attr_img_saliency, cmap='viridis')
-                ax[2].axis('off')
-                ax[2].set_title('Saliency Attribution')
-                colorbar(im, ax=ax[2])
-                ax[3].axis('off')
-                prediction_label = 'Correct' if correct_prediction else 'Incorrect'
-                ax[3].set_title(f'Prediction: {prediction_label}')
-                img_path = os.path.join(output_dir, f"combined_{incorrect_count}_{i}.png")
-                plt.savefig(img_path)
-                plt.close()
-                wandb.log({"combined_image": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
-                os.remove(img_path)
+        for i in range(len(images)):
+            attr_img_grad_cam = grad_cam_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
+            attr_img_saliency = saliency_attr[i].cpu().detach().numpy().transpose(1, 2, 0)
+
+            # Нормалізувати атрибуцію градієнта для відображення як теплову карту
+            attr_img_grad_cam = np.uint8(cm.jet(attr_img_grad_cam)[..., :3] * 255)
+
+            fig, ax = plt.subplots(1, 4, figsize=(24, 6))
+            ax[0].imshow(images[i].cpu().detach().permute(1, 2, 0))
+            ax[0].axis('off')
+            ax[0].set_title('Original Image')
+
+            im = ax[1].imshow(attr_img_grad_cam, cmap='viridis')
+            ax[1].axis('off')
+            ax[1].set_title('Grad-CAM Attribution')
+            colorbar(im, ax=ax[1])
+
+            # Накласти теплову карту Grad-CAM на вихідне зображення
+            orig_img = images[i].cpu().detach().permute(1, 2, 0).numpy()
+            heatmap = cv2.applyColorMap(cv2.resize(attr_img_grad_cam, (orig_img.shape[1], orig_img.shape[0])), cv2.COLORMAP_JET)
+            img_with_heatmap = np.float32(heatmap) * 0.3 + np.float32(orig_img)
+            img_with_heatmap = img_with_heatmap / np.max(img_with_heatmap)
+            ax[2].imshow(img_with_heatmap)
+            ax[2].axis('off')
+            ax[2].set_title('Original Image with Grad-CAM Heatmap')
+
+            im = ax[3].imshow(attr_img_saliency, cmap='viridis')
+            ax[3].axis('off')
+            ax[3].set_title('Saliency Attribution')
+            colorbar(im, ax=ax[3])
+
+            prediction_label = 'Correct' if correct_prediction else 'Incorrect'
+            img_path = os.path.join(output_dir, f"combined_{incorrect_count}_{i}_{prediction_label}.png")
+            plt.suptitle(f'Prediction: {prediction_label}', fontsize=16)
+            plt.savefig(img_path)
+            plt.close()
+
+            wandb.log({"combined_image": [wandb.Image(img_path, caption=f"Label: {labels[i].item()}")]})
+            os.remove(img_path)
 
 if __name__ == "__main__":
     interpret_model(config)
