@@ -65,4 +65,61 @@ Lab 5 includes model interpretability using **Captum**:
 
 ---
 
+##Project Structure
+├── train.py # Training loop + ResNet50 model definition
+├── load_date.py # Data loading, splitting, augmentation
+├── interp.py # GradCAM + Saliency interpretability
+├── check_cuda.py # GPU availability check
+├── params.yaml # Centralized configuration
+├── pyproject.toml # Poetry dependency management
+└── result.txt # Training logs and metrics
+
+
+---
+
+## How to Run
+
+```bash
+# Install dependencies
+poetry install
+
+# Check GPU
+python check_cuda.py
+
+# Train model
+python train.py
+
+# Run interpretability analysis
+python interp.py
+```
+
+> **Note:** Developed and trained in Google Colab with GPU. 
+> Update `data.local_dir` and `artifacts.output_dir` 
+> in `params.yaml` for local execution.
+
+---
+
+## Configuration
+
+All hyperparameters and paths are controlled via `params.yaml`:
+
+```yaml
+model:
+  name: resnet50
+  pretrained: True
+  num_classes: 102
+
+training:
+  epochs: 20
+  batch_size: 32
+  optimizer:
+    name: AdamW
+    lr: 0.0001
+```
+
+---
+
+*Part of the ML Engineering course — NTU KhPI, 2024*
+*Instructor: Maksym Tatariants, PhD (ML Engineer @ Toshiba)*
+## Project Structure
 ## Project Structure
