@@ -66,6 +66,7 @@ Lab 5 includes model interpretability using **Captum**:
 ---
 
 ##Project Structure
+
 ├── train.py # Training loop + ResNet50 model definition
 ├── load_date.py # Data loading, splitting, augmentation
 ├── interp.py # GradCAM + Saliency interpretability
@@ -73,7 +74,6 @@ Lab 5 includes model interpretability using **Captum**:
 ├── params.yaml # Centralized configuration
 ├── pyproject.toml # Poetry dependency management
 └── result.txt # Training logs and metrics
-
 
 ---
 
