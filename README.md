@@ -167,5 +167,3 @@ training:
 
 *Part of the ML Engineering course — NTU KhPI, 2024*
 *Instructor: Maksym Tatariants, PhD (ML Engineer @ Toshiba)*
-## Project Structure
-## Project Structure
