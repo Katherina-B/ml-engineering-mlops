@@ -11,7 +11,7 @@ dataset:
 
 # Training configuration
 training:
-  epochs: 2
+  epochs: 5
   batch_size: 32
   optimizer:
     name: AdamW
@@ -33,14 +33,14 @@ model:
 # Logging configuration
 logging:
   level: INFO
-  file: /content/lb5/logs/training.log
+  file: /content/ml-engineering-mlops/logs/training.log
   format: '%(asctime)s - %(levelname)s - %(message)s'
 
 # Artifacts configuration
 artifacts:
-  output_dir: /content/lb5/artifacts
-  model_file: /content/lb5/artifacts/model.pth
-  best_model_file: /content/lb5/artifacts/best_model.pth
+  output_dir: /content/ml-engineering-mlops/artifacts
+  model_file: /content/ml-engineering-mlops/artifacts/model.pth
+  best_model_file: /content/ml-engineering-mlops/artifacts/best_model.pth
   save_best_model: True
   save_logs: True
   save_metrics: True
